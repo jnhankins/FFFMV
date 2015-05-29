@@ -26,6 +26,11 @@ import java.beans.PropertyChangeSupport;
 /**
  * This is a utility class that privately wraps a {@link PropertyChangeSupport} 
  * instance and publicly exposes some of its methods.
+ * <p>
+ * The {@link PropertyChangeSupport} object is marked as transient and uses lazy
+ * initialization so that subclasses of {@code PropertyChangeAdapter} can
+ * implement {@code Serializable} without serializing the list of
+ * {@code PropertyChangeListener}.
  * 
  * @see java.beans.PropertyChangeSupport
  * @see java.beans.PropertyChangeListener
@@ -34,7 +39,22 @@ import java.beans.PropertyChangeSupport;
  * @author Jeremiah N. Hankins
  */
 public abstract class PropertyChangeAdapter {
-    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+    
+    /**
+     * Property change implementation.
+     */
+    private transient PropertyChangeSupport pcs;
+    
+    /**
+     * Returns the wrapped {@link PropertyChangeSupport} object.
+     * 
+     * @return the wrapped {@link PropertyChangeSupport} object
+     */
+    private PropertyChangeSupport pcs() {
+        if (pcs == null)
+            pcs = new PropertyChangeSupport(this);
+        return pcs;
+    }
     
     /**
      * Add a {@link java.beans.PropertyChangeListener PropertyChangeListener} to
@@ -46,7 +66,7 @@ public abstract class PropertyChangeAdapter {
      * @param listener the {@code PropertyChangelistener} to added
      */
     public void addPropertyChangeListener(PropertyChangeListener listener) {
-        pcs.addPropertyChangeListener(listener);
+        pcs().addPropertyChangeListener(listener);
     }
     
     
@@ -65,7 +85,7 @@ public abstract class PropertyChangeAdapter {
     public void addPropertyChangeListener(
             String propteryName, 
             PropertyChangeListener listener) {
-        pcs.addPropertyChangeListener(propteryName, listener);
+        pcs().addPropertyChangeListener(propteryName, listener);
         
     }
 
@@ -80,7 +100,7 @@ public abstract class PropertyChangeAdapter {
      * @param listener the {@code PropertyChangelistener} to be removed
      */
     public void removePropertyChangeListener(PropertyChangeListener listener) {
-        pcs.removePropertyChangeListener(listener);
+        pcs().removePropertyChangeListener(listener);
     }
     
     /**
@@ -98,7 +118,7 @@ public abstract class PropertyChangeAdapter {
     public void removePropertyChangeListener(
             String propertyName, 
             PropertyChangeListener listener) {
-        pcs.removePropertyChangeListener(propertyName, listener);
+        pcs().removePropertyChangeListener(propertyName, listener);
     }
     
     /**
@@ -110,6 +130,6 @@ public abstract class PropertyChangeAdapter {
      * @param newValue the new value of the property
      */
     protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {
-        pcs.firePropertyChange(propertyName, oldValue, oldValue);
+        pcs().firePropertyChange(propertyName, oldValue, oldValue);
     }
 }
