@@ -75,6 +75,28 @@ public class ProjectFlameSet extends PropertyChangeAdapter implements Serializab
     }
     
     /**
+     * Returns the number of {@link ProjectFlames} in the
+     * {@code ProjectFlameSet}.
+     *
+     * @return the number of {@link ProjectFlames} in the
+     * {@code ProjectFlameSet}
+     */
+    public int size() {
+        return flameList.size();
+    }
+    
+    /**
+     * Returns {@code true} if there are no {@link ProjectFlames} in the
+     * {@code ProjectFlameSet}.
+     *
+     * @return {@code true} if there are no {@link ProjectFlames} in the
+     * {@code ProjectFlameSet}
+     */
+    public boolean isEmpty() {
+        return flameList.isEmpty();
+    }
+    
+    /**
      * Returns an array containing the {@link ProjectFlame} objects contained in
      * this {@code ProjectFlameSet}. Changes to the returned array are not
      * backed by the {@code ProjectFlameSet}.
