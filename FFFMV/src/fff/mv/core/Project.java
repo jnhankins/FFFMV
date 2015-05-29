@@ -21,11 +21,28 @@
 package fff.mv.core;
 
 import fff.mv.util.PropertyChangeAdapter;
+import fff.render.FlameRendererSettings;
 import java.io.File;
 import java.io.Serializable;
 
 /**
- *
+ * {@code Proejct} encapsulates parameters used by FFFMV to create a music 
+ * video using flame fractals.
+ * <p>
+ * It has a human-readable {@code String} name to help the user identify the
+ * project. The default name of a newly constructed {@code Project} is "New
+ * Project."
+ * <p>
+ * It can be associated with a {@code File} for reading and writing
+ * to disk, and {@code Project} maintains a {@code isSaved} boolean flag to
+ * keep track whether or not the project has been modified in some way since
+ * the last time the project was saved.
+ * <p>
+ * {@code Project} contains a {@link ProjectFlameSet} which contains 
+ * {@link ProjectFlame} objects that wrap {@link Flame} instances. 
+ * {@code Project} also contains a {@link KeyFlameList} which provides methods
+ * for generating smooth animations.
+ * 
  * @author Jeremiah N. Hankins
  */
 public class Project extends PropertyChangeAdapter implements Serializable {
@@ -45,6 +62,21 @@ public class Project extends PropertyChangeAdapter implements Serializable {
     public static final String NAME_CHANGED_PROPERTY = "name";
     
     /**
+     * Identifies a change to the frame rate.
+     */
+    public static final String FRAME_RATE_CHANGED_PROPERTY = "frameRate";
+    
+    /**
+     * Identifies a change to the start time offset.
+     */
+    public static final String START_SEC_CHANGED_PROPERTY = "startSec";
+    
+    /**
+     * Identifies a change to the length of the animation.
+     */
+    public static final String LENGTH_SEC_CHANGED_PROPERTY = "lengthSec";
+    
+    /**
      * {@code true} if the {@code Project} and all of its subcomponents have not
      * been modified since the last time the {@code Project} was successfully
      * read or written to its {@link #file}.
@@ -52,25 +84,47 @@ public class Project extends PropertyChangeAdapter implements Serializable {
     private boolean isSaved;
     
     /**
-     * The file backing the project.
+     * File backing the project.
      */
     private File file;
     
     /**
-     * The name of the project.
+     * Name of the project.
+     * Cannot be null or empty.
      */
     private String name;
     
     /**
-     * The set of flames contained in the project.
+     * Set of flames contained in the project.
      */
     private final ProjectFlameSet flameSet;
     
     /**
-     * The key-flame list.
+     * Key-flame list.
      */
     private final KeyFlameList keyFlameList;
     
+    /**
+     * Image settings used by a {@code FlameRenderer}.
+     */
+    private final ProjectFlameSettings flameSettings;
+    
+    /**
+     * Frame rate (frames per second). 
+     * Must be positive.
+     */
+    private double frameRate;
+    
+    /**
+     * Animation starting point offset time in seconds.
+     */
+    private double startSec;
+    
+    /**
+     * Length of animation in seconds.
+     * Must be positive.
+     */
+    private double lengthSec;
     
     /**
      * Constructs a new empty FFFMV {@code Project}.
@@ -86,6 +140,14 @@ public class Project extends PropertyChangeAdapter implements Serializable {
         flameSet = new ProjectFlameSet(this);
         // Empty key-flame list
         keyFlameList = new KeyFlameList(this);
+        // Default image settings
+        flameSettings = new ProjectFlameSettings(this);
+        // 25 fps
+        frameRate = 25;
+        // No starting time offset
+        startSec = 0;
+        // 60 seconds of animation (boring blank animation)
+        lengthSec = 60;
     }
     
     /**
@@ -119,7 +181,7 @@ public class Project extends PropertyChangeAdapter implements Serializable {
      * 
      * @param isSaved the new value of the {@code isSaved} flag
      */
-    protected void setSaved(boolean isSaved) {
+    protected void setIsSaved(boolean isSaved) {
         boolean oldIsSaved = this.isSaved;
         boolean newIsSaved = isSaved;
         if (oldIsSaved != newIsSaved) {
@@ -157,7 +219,7 @@ public class Project extends PropertyChangeAdapter implements Serializable {
         File newFile = file;
         if (newFile.equals(oldFile)) {
             this.file = file;
-            setSaved(false);
+            setIsSaved(false);
             firePropertyChange(FILE_CHANGED_PROPERTY, oldFile, newFile);
         }
     }
@@ -189,7 +251,7 @@ public class Project extends PropertyChangeAdapter implements Serializable {
         String newName = name;
         if (!newName.equals(oldName)) {
             this.name = name;
-            setSaved(false);
+            setIsSaved(false);
             firePropertyChange(NAME_CHANGED_PROPERTY, oldName, newName);
         }
     }
@@ -210,5 +272,112 @@ public class Project extends PropertyChangeAdapter implements Serializable {
      */
     public KeyFlameList getKeyFlameList() {
         return keyFlameList;
+    }
+    
+    /**
+     * Returns the project's {@link ProjectFlameSettings} which wraps the
+     * {@link FlameRendererSettings}.
+     * 
+     * @return the project's {@link ProjectFlameSettings}
+     */
+    public ProjectFlameSettings getFlameSettings() {
+        return flameSettings;
+    }
+    
+    /**
+     * Returns the frame rate (frames per second).
+     * 
+     * @return the frame rate (frames per second)
+     */
+    public double getFrameRate() {
+        return frameRate;
+    }
+    
+    /**
+     * Sets the frame rate (frames per second).
+     * <p>
+     * If the frame rate is changed successfully, then the {@code isSaved} flag
+     * will be set to {@code false}, and a {@link #FRAME_RATE_CHANGED_PROPERTY}
+     * property event will be fired. If the specified name is equal to the
+     * current name, then this method has no effect.
+     * 
+     * @param frameRate the frame rate (frames per second)
+     * @throws IllegalArgumentException if {@code frameRate} is not in range (0,inf)
+     */
+    public void getFrameRate(double frameRate) {
+        if (!(0<frameRate && frameRate<Double.POSITIVE_INFINITY))
+            throw new IllegalArgumentException("frameRate is not in range (0,inf): "+frameRate);
+        double oldFrameRate = this.frameRate;
+        double newFrameRate = frameRate;
+        if (oldFrameRate != newFrameRate) {
+            this.frameRate = frameRate;
+            setIsSaved(false);
+            firePropertyChange(FRAME_RATE_CHANGED_PROPERTY, oldFrameRate, newFrameRate);
+        }
+    }
+    
+    /**
+     * Returns the offset for the beginning of the animation in seconds.
+     * 
+     * @return the offset for the beginning of the animation in seconds
+     */
+    public double getStartSec() {
+        return startSec;
+    }
+    
+    /**
+     * Sets the offset for the beginning of the animation in seconds.
+     * <p>
+     * If the start offset is changed successfully, then the {@code isSaved}
+     * flag will be set to {@code false}, and a
+     * {@link #LENGTH_SEC_CHANGED_PROPERTY} property event will be fired. If the
+     * specified name is equal to the current name, then this method has no
+     * effect.
+     * 
+     * @param startSec the offset for the beginning of the animation in seconds
+     * @throws IllegalArgumentException if {@code startSec} is not in range (-inf, inf)
+     */
+    public void setStartSec(double startSec) {
+        if (!(0<=startSec && startSec<Double.POSITIVE_INFINITY))
+            throw new IllegalArgumentException("startSec is not in range (-inf, inf): "+startSec);
+        double oldStartSec = this.startSec;
+        double newStartSec = startSec;
+        if (oldStartSec != newStartSec) {
+            this.startSec = startSec;
+            setIsSaved(false);
+            firePropertyChange(START_SEC_CHANGED_PROPERTY, oldStartSec, newStartSec);
+        }
+    }
+    
+    /**
+     * Returns the length of the animation in seconds.
+     * 
+     * @return the length of the animation in seconds
+     */
+    public double getLengthSec() {
+        return lengthSec;
+    }
+    
+    /**
+     * Sets the length of the animation in seconds.
+     * <p>
+     * If the length is changed successfully, then the {@code isSaved} flag will
+     * be set to {@code false}, and a {@link #LENGTH_SEC_CHANGED_PROPERTY}
+     * property event will be fired. If the specified name is equal to the
+     * current name, then this method has no effect.
+     * 
+     * @param lengthSec the length of the animation in seconds.
+     * @throws IllegalArgumentException if {@code lengthSec} is not in range (0,inf)
+     */
+    public void setLengthSec(double lengthSec) {
+        if (!(0<=lengthSec && lengthSec<Double.POSITIVE_INFINITY))
+            throw new IllegalArgumentException("lengthSec is not in range [0,inf): "+lengthSec);
+        double oldLengthSec = this.lengthSec;
+        double newLengthSec = lengthSec;
+        if (oldLengthSec != newLengthSec) {
+            this.lengthSec = lengthSec;
+            setIsSaved(false);
+            firePropertyChange(LENGTH_SEC_CHANGED_PROPERTY, oldLengthSec, newLengthSec);
+        }
     }
 }

@@ -123,7 +123,7 @@ public class ProjectFlame extends PropertyChangeAdapter implements Serializable 
      * may need to be updated.
      */
     public void flameChanged() {
-        project.setSaved(false);
+        project.setIsSaved(false);
         firePropertyChange(FLAME_CHANGED_PROPERTY, null, flame);
     }
     
@@ -171,7 +171,7 @@ public class ProjectFlame extends PropertyChangeAdapter implements Serializable 
             return false;
         // Change the name
         this.name = name;
-        project.setSaved(false);
+        project.setIsSaved(false);
         firePropertyChange(NAME_CHANGED_PROPERTY, oldName, newName);
         return true;
     }

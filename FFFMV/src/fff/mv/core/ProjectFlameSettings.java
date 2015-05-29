@@ -84,7 +84,7 @@ public class ProjectFlameSettings extends PropertyChangeAdapter implements Seria
      * {@code false}, and a {@link #SETTINGS_CHANGED_PROPERTY} event is fired.
      */
     public void settingsChanged() {
-        project.setSaved(false);
+        project.setIsSaved(false);
         firePropertyChange(SETTINGS_CHANGED_PROPERTY, null, settings);
     }
 }

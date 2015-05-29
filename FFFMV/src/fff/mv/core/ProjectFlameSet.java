@@ -161,7 +161,7 @@ public class ProjectFlameSet extends PropertyChangeAdapter implements Serializab
             return null;
         ProjectFlame pflame = new ProjectFlame(project, flame, name);
         flameList.add(pflame);
-        project.setSaved(false);
+        project.setIsSaved(false);
         firePropertyChange(FLAME_ADDED_PROPERTY, null, pflame);
         return pflame;
     }
@@ -181,7 +181,7 @@ public class ProjectFlameSet extends PropertyChangeAdapter implements Serializab
     public boolean removeFlame(ProjectFlame pflame) {
         if (flameList.remove(pflame)) {
             project.getKeyFlameList().remove(pflame);
-            project.setSaved(false);
+            project.setIsSaved(false);
             firePropertyChange(FLAME_REMOVED_PROPERTY, pflame, null);
             return true;
         }

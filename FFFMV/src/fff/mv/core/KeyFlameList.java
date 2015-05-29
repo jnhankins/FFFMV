@@ -150,7 +150,7 @@ public class KeyFlameList extends PropertyChangeAdapter implements Serializable 
         Entry entry = entries.remove(index);
         if (this.index > entries.size()-1)
             this.index = -1;
-        project.setSaved(false);
+        project.setIsSaved(false);
         firePropertyChange(ENTRY_REMOVED_PROPERTY, entry, null);
         return entry;
     }
@@ -173,7 +173,7 @@ public class KeyFlameList extends PropertyChangeAdapter implements Serializable 
         if (entries.remove(entry)) {
             if (index > entries.size()-1)
                 index = -1;
-            project.setSaved(false);
+            project.setIsSaved(false);
             firePropertyChange(ENTRY_REMOVED_PROPERTY, entry, null);
             return true;
         }
@@ -270,7 +270,7 @@ public class KeyFlameList extends PropertyChangeAdapter implements Serializable 
             endtryIndex++;
         }
         entries.add(endtryIndex, entry);
-        project.setSaved(false);
+        project.setIsSaved(false);
         firePropertyChange(ENTRY_ADDED_PROPERTY, null, entry);
         return entry;
     }
@@ -435,7 +435,7 @@ public class KeyFlameList extends PropertyChangeAdapter implements Serializable 
             ProjectFlame newFlame = pflame;
             if (oldFlame != newFlame) {
                 this.pflame = pflame;
-                project.setSaved(false);
+                project.setIsSaved(false);
                 firePropertyChange(ENTRY_FLAME_CHANGED_PROPERTY, oldFlame, newFlame);
             }
         }
@@ -466,7 +466,7 @@ public class KeyFlameList extends PropertyChangeAdapter implements Serializable 
                     endtryIndex++;
                 }
                 entries.add(endtryIndex, this);
-                project.setSaved(false);
+                project.setIsSaved(false);
                 firePropertyChange(ENTRY_TIME_CHANGED_PROPERTY, oldTime, newTime);
             }
         }
