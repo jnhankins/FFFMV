@@ -280,7 +280,7 @@ public class Project extends PropertyChangeAdapter implements Serializable {
      * 
      * @return the project's {@link ProjectRendererSettings}
      */
-    public ProjectRendererSettings getFlameSettings() {
+    public ProjectRendererSettings getRendererSettings() {
         return rendererSettings;
     }
     
