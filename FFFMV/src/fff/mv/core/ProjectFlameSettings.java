@@ -27,7 +27,6 @@ import java.io.Serializable;
 /**
  * {@code ProjectFlameSettings} is a wrapper for a {@link FlameRendererSettings}
  * object for use in a {@link Project}.
- * <p>
  */
 public class ProjectFlameSettings extends PropertyChangeAdapter implements Serializable {
     /**
