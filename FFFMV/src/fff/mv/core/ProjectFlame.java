@@ -88,7 +88,7 @@ public class ProjectFlame extends PropertyChangeAdapter implements Serializable 
      * Returns the {@link Project} for which this {@code ProjectFlame} was
      * constructed.
      * 
-     * @return the {@link Project} for which this {@code ProjectFlame} was
+     * @return the {@code Project} for which this {@code ProjectFlame} was
      * constructed
      */
     public Project getProject() {
@@ -99,7 +99,7 @@ public class ProjectFlame extends PropertyChangeAdapter implements Serializable 
      * Returns the {@link Flame} object that this {@code ProjectFlame} is
      * wrapping.
      * 
-     * @return {@link Flame} object that this {@code ProjectFlame} is wrapping
+     * @return {@code Flame} object that this {@code ProjectFlame} is wrapping
      */
     public Flame getFlame() {
         return flame;
