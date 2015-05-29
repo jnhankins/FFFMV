@@ -25,22 +25,22 @@ import fff.render.FlameRendererSettings;
 import java.io.Serializable;
 
 /**
- * {@code ProjectFlameSettings} is a wrapper for a {@link FlameRendererSettings}
+ * {@code ProjectRendererSettings} is a wrapper for a {@link FlameRendererSettings}
  * object for use in a {@link Project}.
  */
-public class ProjectFlameSettings extends PropertyChangeAdapter implements Serializable {
+public class ProjectRendererSettings extends PropertyChangeAdapter implements Serializable {
     /**
      * Identifies a change to the {@link #getSettings() settings}.
      */
     public static final String SETTINGS_CHANGED_PROPERTY = "settings";
     
     /**
-     * The project containing this {@code ProjectFlameSettings}.
+     * The project containing this {@code ProjectRendererSettings}.
      */
     private final Project project;
     
     /**
-     * The settings this {@code ProjectFlameSettings} is wrapping.
+     * The settings this {@code ProjectRendererSettings} is wrapping.
      */
     private final FlameRendererSettings settings;
     
@@ -50,15 +50,15 @@ public class ProjectFlameSettings extends PropertyChangeAdapter implements Seria
      * 
      * @param project the {@code Project} containing this {@code PRojectFlameSettings}
      */
-    protected ProjectFlameSettings(Project project) {
+    protected ProjectRendererSettings(Project project) {
         this.project = project;
         settings = new FlameRendererSettings();
     }
     
     /**
-     * Returns the {@link Project} containing this {@code ProjectFlameSettings}.
+     * Returns the {@link Project} containing this {@code ProjectRendererSettings}.
      * 
-     * @return the {@code Project} containing this {@code ProjectFlameSettings}
+     * @return the {@code Project} containing this {@code ProjectRendererSettings}
      * constructed
      */
     public Project getProject() {
@@ -67,10 +67,10 @@ public class ProjectFlameSettings extends PropertyChangeAdapter implements Seria
 
     /**
      * Returns the {@link FlameRendererSettings} object that this
-     * {@code ProjectFlameSettings} is wrapping.
+     * {@code ProjectRendererSettings} is wrapping.
      *
      * @return {@code FlameRendererSettings} object that this
-     * {@code ProjectFlameSettings} is wrapping
+     * {@code ProjectRendererSettings} is wrapping
      */
     public FlameRendererSettings getSettings() {
         return settings;
@@ -78,7 +78,7 @@ public class ProjectFlameSettings extends PropertyChangeAdapter implements Seria
     
     /**
      * Signals that the {@link FlameRendererSettings} object wrapped by this 
-     * {@code ProjectFlameSettings} has been modified.
+     * {@code ProjectRendererSettings} has been modified.
      * <p>
      * When this method is invoked the project's {@code isSaved} flag is set to
      * {@code false}, and a {@link #SETTINGS_CHANGED_PROPERTY} event is fired.

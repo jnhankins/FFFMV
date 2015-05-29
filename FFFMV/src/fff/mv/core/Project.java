@@ -107,7 +107,7 @@ public class Project extends PropertyChangeAdapter implements Serializable {
     /**
      * Image settings used by a {@code FlameRenderer}.
      */
-    private final ProjectFlameSettings flameSettings;
+    private final ProjectRendererSettings rendererSettings;
     
     /**
      * Frame rate (frames per second). 
@@ -141,7 +141,7 @@ public class Project extends PropertyChangeAdapter implements Serializable {
         // Empty key-flame list
         keyFlameList = new KeyFlameList(this);
         // Default image settings
-        flameSettings = new ProjectFlameSettings(this);
+        rendererSettings = new ProjectRendererSettings(this);
         // 25 fps
         frameRate = 25;
         // No starting time offset
@@ -275,13 +275,13 @@ public class Project extends PropertyChangeAdapter implements Serializable {
     }
     
     /**
-     * Returns the project's {@link ProjectFlameSettings} which wraps the
+     * Returns the project's {@link ProjectRendererSettings} which wraps the
      * {@link FlameRendererSettings}.
      * 
-     * @return the project's {@link ProjectFlameSettings}
+     * @return the project's {@link ProjectRendererSettings}
      */
-    public ProjectFlameSettings getFlameSettings() {
-        return flameSettings;
+    public ProjectRendererSettings getFlameSettings() {
+        return rendererSettings;
     }
     
     /**
