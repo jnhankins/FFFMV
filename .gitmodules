@@ -1,0 +1,3 @@
+[submodule "FFF"]
+	path = FFF
+	url = https://github.com/jnhankins/FastFlameFractals.git
