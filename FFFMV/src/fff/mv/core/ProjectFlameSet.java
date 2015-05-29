@@ -66,6 +66,15 @@ public class ProjectFlameSet extends PropertyChangeAdapter implements Serializab
     }
     
     /**
+     * Returns the {@link Project} containing this {@code projectFlameSet}.
+     * 
+     * @return the {@link Project} containing this {@code projectFlameSet}.
+     */
+    public Project getProject() {
+        return project;
+    }
+    
+    /**
      * Returns an array containing the {@link ProjectFlame} objects contained in
      * this {@code ProjectFlameSet}. Changes to the returned array are not
      * backed by the {@code ProjectFlameSet}.
