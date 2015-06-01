@@ -304,7 +304,7 @@ public class Project extends PropertyChangeAdapter implements Serializable {
      * @param frameRate the frame rate (frames per second)
      * @throws IllegalArgumentException if {@code frameRate} is not in range (0,inf)
      */
-    public void getFrameRate(double frameRate) {
+    public void setFrameRate(double frameRate) {
         if (!(0<frameRate && frameRate<Double.POSITIVE_INFINITY))
             throw new IllegalArgumentException("frameRate is not in range (0,inf): "+frameRate);
         double oldFrameRate = this.frameRate;

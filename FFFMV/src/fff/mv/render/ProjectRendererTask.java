@@ -27,11 +27,31 @@ import fff.render.FlameRendererCallback;
 import fff.render.FlameRendererTask;
 
 /**
- *
+ * {@code ProjectRendererTask} is an implementation of {@link FlameRendererTask}
+ * for rendering {@link Project} instances. 
+ * <p>
+ * A {@code ProjectRendererTask} generates a sequence of {@link Flame}
+ * instances, which are retrieved via {@link #getNextFlame()}, that correspond
+ * to individual frames and together form the animation for the {@code Proejct}
+ * the {@code ProjectRendererTask} wraps. {@link Project#getFrameRate()} and
+ * {@link Project#getLengthSec()} determine the number of frames per second of
+ * animation and the total length of the animation respectively.
+ * <p>
+ * To generate {@code Flame} instances, {@code ProjectRendererTask} first 
+ * determines the animation time for the next flame, retrieves the base flame
+ * for the current time from the project's {@link KeyFlameList}, then applies
+ * the effects to the base flame for that time, before returning the final
+ * flame. For performance reasons, the same {@code Flame} object is used to 
+ * return the results each time {@code hasNextFlame()} is invoked.
+ * <p>
+ * If a {@code startFrameIndex} is not specified during construction, then the
+ * default {@code startFrameIndex} will be {@code 0}. The frame at index 
+ * {@code 0} corresponds to the first frame at time 
+ * {@link Project#getStartSec()}.
+ * 
  * @author Jeremiah N. Hankins
  */
 public class ProjectRendererTask extends FlameRendererTask {
-    private final Project project;
     private final KeyFlameList keyFlameList;
     private final double startSec;
     private final double lengthSec;
@@ -40,23 +60,44 @@ public class ProjectRendererTask extends FlameRendererTask {
     private int frameIndex;
     private Flame flame;
     
-    
-    public ProjectRendererTask(FlameRendererCallback callback, Project project) {
-        this(callback, project, 0);
-    }
-        
+    /**
+     * Constructs a new {@code ProjectRendererTask} using the specified 
+     * {@link Project} and {@link FlameRendererCallback} function.
+     * <p>
+     * The {@code ProjectRendererTask} will return {@link Flame} objects 
+     * corresponding to frames 
+     * 
+     * @param project the project to render
+     * @param callback the callback function used by the {@link FlameRenderer}
+     */
     public ProjectRendererTask(
-            FlameRendererCallback callback, 
+            Project project, 
+            FlameRendererCallback callback) {
+        this(project, callback, 0);
+    }
+    
+    /**
+     * Constructs a new {@code ProjectRendererTask} using the specified 
+     * {@link Project}, {@link FlameRendererCallback} function, and 
+     * {@code startFrameIndex}. 
+     * <p>
+     * The parameter {@code startFrameIndex} allows the 
+     * {@code ProjectRendererTask} begin at the specified frame index.
+     * 
+     * @param project the project to render
+     * @param callback the callback function used by the {@link FlameRenderer}
+     * @param startFrameIndex 
+     */
+    public ProjectRendererTask(
             Project project,
-            int startFrameIndex)
-    {
+            FlameRendererCallback callback, 
+            int startFrameIndex) {
         super(callback, project.getRendererSettings().getSettings());
-        this.project = project;
         keyFlameList = project.getKeyFlameList();
         startSec = project.getStartSec();
         lengthSec = project.getLengthSec();
         frameRate = project.getFrameRate();
-        frameCount = Math.max((int)Math.ceil(lengthSec/frameRate), 1);
+        frameCount = Math.max((int)Math.ceil(lengthSec*frameRate), 1);
         frameIndex = startFrameIndex;
     }
 
@@ -73,8 +114,8 @@ public class ProjectRendererTask extends FlameRendererTask {
         // Increment the frame index
         frameIndex++;
         // Get the base flame from the keyflame list
-        flame = keyFlameList.getFlame(time, flame);
-        // TODO: Apply effectsS
+        flame = keyFlameList.getFlame(time, new Flame());
+        // TODO: Apply effectss
         // Return the flame
         return flame;
     }
