@@ -16,7 +16,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fff.mv.render;
+package fff.mv.core;
 
 import fff.flame.Flame;
 import fff.mv.core.KeyFlameList;

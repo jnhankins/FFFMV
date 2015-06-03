@@ -16,7 +16,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fff.mv.util;
+package fff.mv.core;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;

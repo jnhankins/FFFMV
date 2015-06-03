@@ -18,7 +18,6 @@
 
 package fff.mv.core;
 
-import fff.mv.util.PropertyChangeAdapter;
 import fff.render.FlameRendererSettings;
 import java.io.Serializable;
 

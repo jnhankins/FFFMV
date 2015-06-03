@@ -19,7 +19,6 @@
 package fff.mv.core;
 
 import fff.flame.Flame;
-import fff.mv.util.PropertyChangeAdapter;
 import java.io.Serializable;
 import java.util.ArrayList;
 
