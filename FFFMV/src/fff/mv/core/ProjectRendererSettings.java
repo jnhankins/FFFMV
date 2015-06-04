@@ -18,11 +18,11 @@
 
 package fff.mv.core;
 
-import fff.render.FlameRendererSettings;
+import fff.render.RendererSettings;
 import java.io.Serializable;
 
 /**
- * {@code ProjectRendererSettings} is a wrapper for a {@link FlameRendererSettings}
+ * {@code ProjectRendererSettings} is a wrapper for a {@link RendererSettings}
  * object for use in a {@link Project}.
  */
 public class ProjectRendererSettings extends PropertyChangeAdapter implements Serializable {
@@ -39,7 +39,7 @@ public class ProjectRendererSettings extends PropertyChangeAdapter implements Se
     /**
      * The settings this {@code ProjectRendererSettings} is wrapping.
      */
-    private final FlameRendererSettings settings;
+    private final RendererSettings settings;
     
     /**
      * Constructs a new {@code ProjectFlameSettings} object for the specified 
@@ -49,7 +49,7 @@ public class ProjectRendererSettings extends PropertyChangeAdapter implements Se
      */
     protected ProjectRendererSettings(Project project) {
         this.project = project;
-        settings = new FlameRendererSettings();
+        settings = new RendererSettings();
     }
     
     /**
@@ -63,18 +63,18 @@ public class ProjectRendererSettings extends PropertyChangeAdapter implements Se
     }
 
     /**
-     * Returns the {@link FlameRendererSettings} object that this
+     * Returns the {@link RendererSettings} object that this
      * {@code ProjectRendererSettings} is wrapping.
      *
-     * @return {@code FlameRendererSettings} object that this
+     * @return {@code RendererSettings} object that this
      * {@code ProjectRendererSettings} is wrapping
      */
-    public FlameRendererSettings getSettings() {
+    public RendererSettings getSettings() {
         return settings;
     }
     
     /**
-     * Signals that the {@link FlameRendererSettings} object wrapped by this 
+     * Signals that the {@link RendererSettings} object wrapped by this 
      * {@code ProjectRendererSettings} has been modified.
      * <p>
      * When this method is invoked the project's {@code isSaved} flag is set to

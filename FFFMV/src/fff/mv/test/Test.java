@@ -19,14 +19,16 @@
 package fff.mv.test;
 
 import fff.flame.Flame;
+import fff.flame.FlameFactory;
 import fff.mv.core.KeyFlameList;
 import fff.mv.core.Project;
 import fff.mv.core.ProjectFlame;
 import fff.mv.core.ProjectFlameSet;
-import fff.mv.render.ProjectRendererTask;
+import fff.mv.core.ProjectRendererTask;
+import fff.render.BasicCallback;
 import fff.render.FlameRenderer;
-import fff.render.FlameRendererCallback;
-import fff.render.FlameRendererTask;
+import fff.render.RendererCallback;
+import fff.render.RendererTask;
 import fff.render.ocl.FlameRendererOpenCL;
 import fff.render.ocl.FlameRendererOpenCL.DeviceType;
 import java.awt.image.BufferedImage;
@@ -50,14 +52,14 @@ public class Test {
         // Get the project's flame set
         ProjectFlameSet pflameSet = project.getProjectFlameSet();
         
-        // Add a normal Sierpinski triangle to the project
-        Flame flame0 = Flame.newSierpinski();
-        ProjectFlame pflame0 = pflameSet.add(flame0, "Sierpinski");
+        // Add a normal Sierpinski Triangle to the project
+        Flame flame0 = FlameFactory.newSierpinskiTriangle();
+        ProjectFlame pflame0 = pflameSet.add(flame0, "Sierpinski Triangle");
         
-        // Add an upsidedown Sierpinski triangle to the project
-        Flame flame1 = Flame.newSierpinski();
+        // Add a Golden Dragon Curve to the project
+        Flame flame1 = FlameFactory.newGoldenDragonCurve();
         flame1.getView().setRotation(180);
-        ProjectFlame pflame1 = pflameSet.add(flame1, "Sierpinski (+180)");
+        ProjectFlame pflame1 = pflameSet.add(flame1, "Golden Dragon Curve");
         
         // Create an animation (flame0 -> flame1 -> flame0)
         KeyFlameList keyFlameList = project.getKeyFlameList();
@@ -71,9 +73,9 @@ public class Test {
         project.setLengthSec(20); // 20 sec
         
         // Create the callback function
-        FlameRendererCallback callback = new PNGWriterCallback();
+        RendererCallback callback = new BasicCallback("test", 4);
         // Create the renderer task
-        FlameRendererTask task = new ProjectRendererTask(project, callback);
+        RendererTask task = new ProjectRendererTask(project, callback);
         // Create the renderer
         FlameRenderer renderer = new FlameRendererOpenCL(DeviceType.ALL);
         // Enqueue the task
@@ -82,38 +84,5 @@ public class Test {
         renderer.start();
         // Shutdown when complete
         renderer.shutdown();
-    }
-    
-    static class PNGWriterCallback implements FlameRendererCallback {
-        @Override
-        public void flameRendererCallback(
-                FlameRendererTask task, // task that generated the callback
-                Flame flame,            // flame being worked on
-                BufferedImage image,    // current flame image
-                double quality,         // current image quality
-                double points,          // number of points plotted
-                double elapsedTime,     // time spent on image
-                boolean isFinished)     // true if image is complete
-        {
-            // Display progress updates
-            System.out.println(String.format("Drawn %.2fM dots in %.2f sec at %.2fM dots/sec for quality of %.2f.", points/1e7, elapsedTime, points/(1e7*elapsedTime), quality));
-            // If the image is completed...
-            if (isFinished) {
-                // Get the frame number
-                int frameNo = ((ProjectRendererTask)task).getPrevFrameIndex();
-                // Create the file name
-                String fileName = String.format("test%04d.png", frameNo);
-                // Try to write the image as a PNG file
-                File file = new File(fileName);
-                try {
-                    System.out.println("Writing PNG image file: "+file.getCanonicalPath());
-                    ImageIO.write(image, "png", file);
-                } catch (IOException ex) {
-                    ex.printStackTrace(System.err);
-                    System.exit(0);
-                }
-                System.out.println();
-            }
-        }
     }
 }

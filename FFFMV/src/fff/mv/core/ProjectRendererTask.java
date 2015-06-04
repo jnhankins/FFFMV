@@ -21,11 +21,11 @@ package fff.mv.core;
 import fff.flame.Flame;
 import fff.mv.core.KeyFlameList;
 import fff.mv.core.Project;
-import fff.render.FlameRendererCallback;
-import fff.render.FlameRendererTask;
+import fff.render.RendererCallback;
+import fff.render.RendererTask;
 
 /**
- * {@code ProjectRendererTask} is an implementation of {@link FlameRendererTask}
+ * {@code ProjectRendererTask} is an implementation of {@link RendererTask}
  * for rendering {@link Project} instances. 
  * <p>
  * A {@code ProjectRendererTask} generates a sequence of {@link Flame}
@@ -49,7 +49,7 @@ import fff.render.FlameRendererTask;
  * 
  * @author Jeremiah N. Hankins
  */
-public class ProjectRendererTask extends FlameRendererTask {
+public class ProjectRendererTask extends RendererTask {
     private final KeyFlameList keyFlameList;
     private final double startSec;
     private final double lengthSec;
@@ -60,7 +60,7 @@ public class ProjectRendererTask extends FlameRendererTask {
     
     /**
      * Constructs a new {@code ProjectRendererTask} using the specified 
-     * {@link Project} and {@link FlameRendererCallback} function.
+     * {@link Project} and {@link RendererCallback} function.
      * <p>
      * The {@code ProjectRendererTask} will return {@link Flame} objects 
      * corresponding to frames 
@@ -70,13 +70,13 @@ public class ProjectRendererTask extends FlameRendererTask {
      */
     public ProjectRendererTask(
             Project project, 
-            FlameRendererCallback callback) {
+            RendererCallback callback) {
         this(project, callback, 0);
     }
     
     /**
      * Constructs a new {@code ProjectRendererTask} using the specified 
-     * {@link Project}, {@link FlameRendererCallback} function, and 
+     * {@link Project}, {@link RendererCallback} function, and 
      * {@code startFrameIndex}. 
      * <p>
      * The parameter {@code startFrameIndex} allows the 
@@ -88,7 +88,7 @@ public class ProjectRendererTask extends FlameRendererTask {
      */
     public ProjectRendererTask(
             Project project,
-            FlameRendererCallback callback, 
+            RendererCallback callback, 
             int startFrameIndex) {
         super(callback, project.getRendererSettings().getSettings());
         keyFlameList = project.getKeyFlameList();

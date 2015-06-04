@@ -18,7 +18,7 @@
 
 package fff.mv.core;
 
-import fff.render.FlameRendererSettings;
+import fff.render.RendererSettings;
 import java.io.File;
 import java.io.Serializable;
 
@@ -273,7 +273,7 @@ public class Project extends PropertyChangeAdapter implements Serializable {
     
     /**
      * Returns the project's {@link ProjectRendererSettings} which wraps the
-     * {@link FlameRendererSettings}.
+     * {@link RendererSettings}.
      * 
      * @return the project's {@link ProjectRendererSettings}
      */
