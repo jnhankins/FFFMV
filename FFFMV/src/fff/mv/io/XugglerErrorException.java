@@ -35,6 +35,17 @@ public class XugglerErrorException extends IOException {
     
     /**
      * Constructs a new {@code XugglerErrorException} for the specified error
+     * number and message. 
+     * 
+     * @param errorNumber the error number
+     * @param msg the message
+     */
+    public XugglerErrorException(int errorNumber, String msg) {
+        this(IError.make(errorNumber), msg);
+    }
+    
+    /**
+     * Constructs a new {@code XugglerErrorException} for the specified error
      * and message.
      * 
      * @param error the error

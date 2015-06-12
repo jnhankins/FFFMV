@@ -141,7 +141,7 @@ public class ProjectFlame extends PropertyChangeAdapter implements Serializable 
      * then the name of this {@code ProjectFlame} will not change. Returns
      * {@code true} if at the end of this method call, the name of the
      * {@code ProjectFlame} is equal to the specified name, otherwise
-     * {@code flase}.
+     * {@code false}.
      * <p>
      * If the name of this {@code ProjectFlame} is changed as a result of this
      * method call, then the project's {@code isSaved} flag will be set to

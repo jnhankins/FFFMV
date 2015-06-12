@@ -72,10 +72,10 @@ public class ProjectFlameSet extends PropertyChangeAdapter implements Serializab
     }
     
     /**
-     * Returns the number of {@link ProjectFlames} in the
+     * Returns the number of {@link ProjectFlame} objects in the
      * {@code ProjectFlameSet}.
      *
-     * @return the number of {@link ProjectFlames} in the
+     * @return the number of {@link ProjectFlame} objects in the
      * {@code ProjectFlameSet}
      */
     public int size() {
@@ -83,10 +83,10 @@ public class ProjectFlameSet extends PropertyChangeAdapter implements Serializab
     }
     
     /**
-     * Returns {@code true} if there are no {@link ProjectFlames} in the
+     * Returns {@code true} if there are no {@link ProjectFlame} objects in the
      * {@code ProjectFlameSet}.
      *
-     * @return {@code true} if there are no {@link ProjectFlames} in the
+     * @return {@code true} if there are no {@link ProjectFlame} objects in the
      * {@code ProjectFlameSet}
      */
     public boolean isEmpty() {

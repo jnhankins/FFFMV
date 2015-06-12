@@ -36,7 +36,7 @@ import java.io.Serializable;
  * the last time the project was saved.
  * <p>
  * {@code Project} contains a {@link ProjectFlameSet} which contains 
- * {@link ProjectFlame} objects that wrap {@link Flame} instances. 
+ * {@link ProjectFlame} objects that wrap {@link fff.flame.Flame} instances. 
  * {@code Project} also contains a {@link KeyFlameList} which provides methods
  * for generating smooth animations.
  * 
@@ -107,10 +107,18 @@ public class Project extends PropertyChangeAdapter implements Serializable {
     private final ProjectRendererSettings rendererSettings;
     
     /**
-     * Frame rate (frames per second). 
-     * Must be positive.
+     * The time scale units.
+     * <p>
+     * The frame rate is {@code timeScale/timeStep}.
      */
-    private double frameRate;
+    private int timeScale;
+    
+    /**
+     * The number of time time scale units per frame.
+     * <p>
+     * The frame rate is {@code timeScale/timeStep}.
+     */
+    private int timeStep;
     
     /**
      * Animation starting point offset time in seconds.
@@ -140,7 +148,8 @@ public class Project extends PropertyChangeAdapter implements Serializable {
         // Default image settings
         rendererSettings = new ProjectRendererSettings(this);
         // 25 fps
-        frameRate = 25;
+        timeStep = 1;
+        timeScale = 25;
         // No starting time offset
         startSec = 0;
         // 60 seconds of animation (boring blank animation)
@@ -282,34 +291,65 @@ public class Project extends PropertyChangeAdapter implements Serializable {
     }
     
     /**
-     * Returns the frame rate (frames per second).
+     * Returns the number of time scale units per frame.
      * 
-     * @return the frame rate (frames per second)
+     * @return the number of time scale units per frame
+     * @see #setFrameRate(int, int) 
      */
-    public double getFrameRate() {
-        return frameRate;
+    public int getTimeStep() {
+        return timeStep;
     }
     
     /**
-     * Sets the frame rate (frames per second).
+     * Returns the time scale units in fractions of a second.
+     * 
+     * @return the time scale units in fractions of a second
+     * @see #setFrameRate(int, int) 
+     */
+    public int getTimeScale() {
+        return timeScale;
+    }
+    
+    /**
+     * Returns the frame rate (frames per second).
+     * <br>
+     * Equivalent to: <pre>{@code getTimeScale()/(double)getTimeStep()}</pre>
+     * 
+     * @return the frame rate (frames per second)
+     * @see #setFrameRate(int, int) 
+     */
+    public double getFrameRate() {
+        return timeScale/(double)timeStep;
+    }
+    
+    /**
+     * Sets the frame rate (frames per second) through the parameters
+     * {@code timeStep} and {@code timeScale} which determine the frame rate
+     * by the formula {@code timeStep/timeScale}.
      * <p>
      * If the frame rate is changed successfully, then the {@code isSaved} flag
      * will be set to {@code false}, and a {@link #FRAME_RATE_CHANGED_PROPERTY}
-     * property event will be fired. If the specified name is equal to the
-     * current name, then this method has no effect.
+     * property event will be fired. If the specified time step and scale are 
+     * equal to the current time step and scale, then this method has no effect.
      * 
-     * @param frameRate the frame rate (frames per second)
-     * @throws IllegalArgumentException if {@code frameRate} is not in range (0,inf)
+     * @param timeStep the number of time scale units between frames
+     * @param timeScale time scale units in fractions of a second
+     * @throws IllegalArgumentException {@code timeStep} is not in range [1,inf)
+     * @throws IllegalArgumentException {@code timeScale} is not in range [1,inf)
      */
-    public void setFrameRate(double frameRate) {
-        if (!(0<frameRate && frameRate<Double.POSITIVE_INFINITY))
-            throw new IllegalArgumentException("frameRate is not in range (0,inf): "+frameRate);
-        double oldFrameRate = this.frameRate;
-        double newFrameRate = frameRate;
-        if (oldFrameRate != newFrameRate) {
-            this.frameRate = frameRate;
+    public void setFrameRate(int timeStep, int timeScale) {
+        if (timeStep < 1)
+            throw new IllegalArgumentException("timeStep is not in range [1,inf): "+timeStep);
+        if (timeScale < 1)
+            throw new IllegalArgumentException("timeScale is not in range [1,inf): "+timeScale);
+        if (timeStep != this.timeStep || timeScale != this.timeScale) {
+            double oldFrameRate = getFrameRate();
+            this.timeStep = timeStep;
+            this.timeScale = timeScale;
+            double newFrameRate = getFrameRate();
             setIsSaved(false);
             firePropertyChange(FRAME_RATE_CHANGED_PROPERTY, oldFrameRate, newFrameRate);
+            
         }
     }
     
@@ -328,8 +368,8 @@ public class Project extends PropertyChangeAdapter implements Serializable {
      * If the start offset is changed successfully, then the {@code isSaved}
      * flag will be set to {@code false}, and a
      * {@link #LENGTH_SEC_CHANGED_PROPERTY} property event will be fired. If the
-     * specified name is equal to the current name, then this method has no
-     * effect.
+     * specified start time is equal to the current start time, then this method
+     * has no effect.
      * 
      * @param startSec the offset for the beginning of the animation in seconds
      * @throws IllegalArgumentException if {@code startSec} is not in range (-inf, inf)
@@ -360,8 +400,8 @@ public class Project extends PropertyChangeAdapter implements Serializable {
      * <p>
      * If the length is changed successfully, then the {@code isSaved} flag will
      * be set to {@code false}, and a {@link #LENGTH_SEC_CHANGED_PROPERTY}
-     * property event will be fired. If the specified name is equal to the
-     * current name, then this method has no effect.
+     * property event will be fired. If the specified length is equal to the
+     * current length, then this method has no effect.
      * 
      * @param lengthSec the length of the animation in seconds.
      * @throws IllegalArgumentException if {@code lengthSec} is not in range (0,inf)

@@ -26,7 +26,7 @@ import fff.mv.core.ProjectFlame;
 import fff.mv.core.ProjectFlameSet;
 import fff.mv.core.ProjectRendererTask;
 import fff.mv.io.VideoEncoder;
-import fff.mv.io.XugglerErrorException;
+import fff.mv.io.XugglerVideoEncoder;
 import fff.render.FlameRenderer;
 import fff.render.RendererCallback;
 import fff.render.RendererSettings;
@@ -34,6 +34,8 @@ import fff.render.RendererTask;
 import fff.render.ocl.FlameRendererOpenCL;
 import fff.render.ocl.FlameRendererOpenCL.DeviceType;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * For testing the fff.mv.core classes.
@@ -41,10 +43,10 @@ import java.awt.image.BufferedImage;
  * @author Jeremiah N. Hankins
  */
 public class Test {
-    public static String audioFileName = "E:\\party music\\05 - SOHO - Hippychick (Dub Plate Instrumental).mp3";
-    public static String outputFile = "TestOutput.avi";
+    public static String audioFileName = "../samples/audio/Kevin MacLeod - Exit the Premises.mp3";
+    public static String outputFile = "TestOutput.mp4";
     
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         try {
             // Create a new empty project
             Project project = new Project();
@@ -71,30 +73,32 @@ public class Test {
             keyFlameList.add(pflame0,  20); // 20 sec
 
             // Set timing info: 25 fps, 20 sec long
-            project.setFrameRate(25); // 25 fps
-            project.setStartSec(0);   //  0 sec
-            project.setLengthSec(20); // 20 sec
+            project.setFrameRate(1, 25); // 25 fps
+            project.setStartSec(0);      //  0 sec
+            project.setLengthSec(20);    // 20 sec
             
             // Set some optimization flags
             RendererSettings settings = project.getRendererSettings().getSettings();
-            settings.setUseJitter(false);
             settings.setUsePostAffines(false);
             settings.setUseFinalTransform(false);
             settings.setUseVariations(false);
+            settings.setUseJitter(false);
             
             // Create the video encoder
-            VideoEncoder encoder = new VideoEncoder(
-                    outputFile,
+            VideoEncoder encoder = new XugglerVideoEncoder(
+                    new File(outputFile),
                     project.getRendererSettings().getSettings().getWidth(),
                     project.getRendererSettings().getSettings().getHeight(),
-                    project.getFrameRate(),
-                    audioFileName,
-                    0);
+                    project.getTimeStep(),
+                    project.getTimeScale());
+            
+            // Set an audio track
+            encoder.setAudio(new File(audioFileName), 0);
             
             // Create the callback function
             RendererCallback callback = new RendererCallback() {
                 @Override
-                public void flameRendererCallback(RendererTask task, Flame flame, BufferedImage image, double quality, double points, double elapsedTime, boolean isFinished) {
+                public void rendererCallback(RendererTask task, Flame flame, BufferedImage image, double quality, double points, double elapsedTime, boolean isFinished) {
                     // Print an update
                     System.out.println(String.format("Drawn %.2fM dots in %.2f sec at %.2fM dots/sec for quality of %.2f.", points/1e7, elapsedTime, points/(1e7*elapsedTime), quality));
                     // If the image is finished...
@@ -108,14 +112,14 @@ public class Test {
                         // Get the taks's time for the frame
                         double tTimeSec = ptask.getPrevFrameTime();
                         // Get the encoder's time for the frame
-                        double eTimeSec = encoder.getTimeMicro()/1e6;
+                        double eTimeSec = encoder.getFrameTime();
                         // Print an update abount encoding
                         System.out.println("Encoding frame "+index+"/"+total+" @"+formatTime(tTimeSec)+" @"+formatTime(eTimeSec)+"\n");
                         try {
                             // Append the image to the end of the video
-                            encoder.encodeFrame(image);
+                            encoder.addFrame(image);
                             // If an error occured decoding the audio source file...
-                        } catch (XugglerErrorException ex) {
+                        } catch (IOException ex) {
                             // Print a stack trace for the error
                             ex.printStackTrace(System.err);
                             // And trigger shutdown hooks
@@ -137,7 +141,7 @@ public class Test {
             renderer.shutdown();
             // Wait for shutdown
             renderer.awaitTermination(Long.MAX_VALUE);
-            // Close the encoder (not strictly required)
+            // Close the encoder (not strictly necessary)
             encoder.close();
             // All Done!
             System.out.println("Done");

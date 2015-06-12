@@ -18,154 +18,190 @@
 
 package fff.mv.io;
 
-import com.xuggle.mediatool.IMediaReader;
-import com.xuggle.mediatool.IMediaWriter;
-import com.xuggle.mediatool.MediaListenerAdapter;
-import com.xuggle.mediatool.ToolFactory;
-import com.xuggle.mediatool.event.IAudioSamplesEvent;
-import com.xuggle.xuggler.IAudioSamples;
-import com.xuggle.xuggler.ICodec;
-import com.xuggle.xuggler.IContainer;
-import com.xuggle.xuggler.IError;
-import com.xuggle.xuggler.IRational;
-import com.xuggle.xuggler.IStream;
-import com.xuggle.xuggler.IStreamCoder;
-import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 /**
- * {@code VideoEncoder} converts a sequence of images into video.
- * <p>
- * Resultant output files uses the H264 video codec and MP3 audio codec.
- * <p>
- * The methods contained in this class are not synchronized.
- * 
+ *
  * @author Jeremiah N. Hankins
  */
-public class VideoEncoder {
+public abstract class VideoEncoder implements Closeable {
     /**
-     * The video stream index.
+     * The output file.
      */
-    private static final int videoStreamIndex = 0;
+    private final File destFile;
     
     /**
-     * The audio stream index.
+     * The width of the video in pixels.
      */
-    private static final int audioStreamIndex = 1;
+    private final int width;
     
     /**
-     * The FFMPEG encoder wrapper.
+     * The height of the video in pixels.
      */
-    private final IMediaWriter writer;
+    private final int height;
     
     /**
-     * The image buffer which the correct resolution and pixel format
+     * The time scale units.
+     * <p>
+     * The frame rate is {@code timeScale/timeStep}.
      */
-    private final BufferedImage imageBuffer;
+    private final int timeScale;
     
     /**
-     * The graphics context for the {@link #imageBuffer}.
+     * The number of time time scale units per frame.
+     * <p>
+     * The frame rate is {@code timeScale/timeStep}.
      */
-    private final Graphics imageBufferGraphics;
+    private final int timeStep;
     
     /**
-     * The frame rate.
+     * The audio file source or {@code null} if no audio source has been set.
      */
-    private final double framesPerSecond;
+    private File audioFile;
     
     /**
-     * The index of the next frame to encode. The first index is 0.
+     * The frame index.
      */
-    private int frameIndex;
+    private long frameIndex;
     
     /**
-     * The audio stream transcoder. If {@code null}, then audio will not be
-     * transcoded into the output file.
+     * {@code true} if the {@link #close()} method has been called.
      */
-    private AudioStreamTranscoder audioTranscoder;
-    
+    private boolean isClosed;
     
     /**
-     * Constructs a new {@code VideoEncoder} without audio.
+     * Initializes the protected fields of {@code VideoEncoder}.
      * 
-     * @param outputFileName the output file name
-     * @param width the video width in pixels
-     * @param height the video height in pixels
-     * @param framesPerSecond the video frame rate
-     * @throws IllegalArgumentException if {@code fileName} is {@code null} or empty
-     * @throws IllegalArgumentException if {@code width} is not in range [1,inf)
-     * @throws IllegalArgumentException if {@code height} is not in range [1,inf)
-     * @throws IllegalArgumentException if {@code framesPerSecond} is not in range (0,inf)
+     * @param destFile the destination destFile
+     * @param width the width of the image in pixels
+     * @param height the height of the image in pixels
+     * @param timeStep the number of time scale units between frames
+     * @param timeScale time scale units in fractions of a second
+     * @throws IllegalArgumentException {@code destFile} is {@code null}
+     * @throws IllegalArgumentException {@code width} is not in range [1,inf)
+     * @throws IllegalArgumentException {@code height} is not in range [1,inf)
+     * @throws IllegalArgumentException {@code timeStep} is not in range [1,inf)
+     * @throws IllegalArgumentException {@code timeScale} is not in range [1,inf)
      */
-    public VideoEncoder(String outputFileName, int width, int height, double framesPerSecond) {
-        if (outputFileName == null || outputFileName.isEmpty())
-            throw new IllegalArgumentException("fileName is null or empty: "+outputFileName);
+    protected VideoEncoder(File destFile, int width, int height, int timeStep, int timeScale) {
+        if (destFile == null)
+            throw new IllegalArgumentException("file is null");
         if (width < 1)
             throw new IllegalArgumentException("width is not in range [1,inf): "+width);
         if (height < 1)
             throw new IllegalArgumentException("height is not in range [1,inf): "+height);
-        if (!(0 < framesPerSecond && framesPerSecond < Double.POSITIVE_INFINITY))
-            throw new IllegalArgumentException("framesPerSecond is not in range (0,inf): "+height);
-        // Store the frame rate
-        this.framesPerSecond = framesPerSecond;
-        // Create the output file
-        final File outputFile = new File(outputFileName);
-        // If the output file exists delete it
-        if (outputFile.exists())
-            outputFile.delete();
-        // Create the media writer
-        writer = ToolFactory.makeWriter(outputFileName);
-        // Add a video stream
-        writer.addVideoStream(
-                videoStreamIndex,                // Writer's video stream index
-                0,                               // Codec stream id
-                ICodec.ID.CODEC_ID_H264,      // H264 Codec
-                IRational.make(framesPerSecond), // Frame Rate
-                width,                           // Image width
-                height);                         // Image Height
-//        // Get the writer's container
-//        final IContainer container = writer.getContainer();
-//        // Get the video stream
-//        final IStream videoStream = container.getStream(videoStreamIndex);
-//        // Get the video encoder
-//        final IStreamCoder videoEncoder = videoStream.getStreamCoder();
-//        // Set the bit rate to adjust quality
-//        videoEncoder.setBitRate(5000*1000);
-        // Create the image buffer with the correct resolution and pixel format
-        imageBuffer = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
-        // Create a graphics context for the image buffer
-        imageBufferGraphics = imageBuffer.createGraphics();
-        // Set the inital frame index
+        if (timeStep < 1)
+            throw new IllegalArgumentException("timeStep is not in range [1,inf): "+timeStep);
+        if (timeScale < 1)
+            throw new IllegalArgumentException("timeScale is not in range [1,inf): "+timeScale);
+        this.destFile = destFile;
+        this.width = width;
+        this.height = height;
+        this.timeStep = timeStep;
+        this.timeScale = timeScale;
+        audioFile = null;
         frameIndex = 0;
+        isClosed = false;
     }
     
     /**
-     * Constructs a new {@code VideoEncoder} with audio.
+     * Returns the destination file.
      * 
-     * @param outputFileName the output file name
-     * @param width the video width in pixels
-     * @param height the video height in pixels
-     * @param framesPerSecond the video frame rate
-     * @param audioFileName the audio source file
-     * @param audioSeekTime the time to seek to in the audio stream in microseconds
-     * @throws IllegalArgumentException if {@code fileName} is {@code null} or empty
-     * @throws IllegalArgumentException if {@code width} is not in range [1,inf)
-     * @throws IllegalArgumentException if {@code height} is not in range [1,inf)
-     * @throws IllegalArgumentException if {@code framesPerSecond} is not in range (0,inf)
-     * @thrwos IllegalArgumentException if {@code audioFileName} is {@code null} or empty
-     * @throws IllegalArgumentException if {2code audioSeekTime} is not in range [0,inf)
-     * @throws IOException if there was an error opening or reading the audio file
-     * @throws AudioStreamNotFoundException if the file specified does not contain an audio stream
-     * @throws XugglerErrorException if an error occurred while seeking to the specified time
+     * @return the destination file
      */
-    public VideoEncoder(String outputFileName, int width, int height, double framesPerSecond, String audioFileName, long audioSeekTime) 
-            throws AudioStreamNotFoundException, XugglerErrorException, IOException {
-        this(outputFileName, width, height, framesPerSecond);
-        // Create the audio transcoder
-        audioTranscoder = new AudioStreamTranscoder(audioFileName, audioSeekTime);
+    public File getDestFile() {
+        return destFile;
+    }
+    
+    /**
+     * Returns the width of the video in pixels.
+     * 
+     * @return the width of the video in pixels
+     */
+    public int getWidth() {
+        return width;
+    }
+    
+    /**
+     * Returns the height of the video in pixels.
+     * 
+     * @return the height of the video in pixels
+     */
+    public int getHeight() {
+        return height;
+    }
+    
+    /**
+     * Returns the number of time scale units per frame.
+     * 
+     * @return the number of time scale units per frame
+     */
+    public int getTimeStep() {
+        return timeStep;
+    }
+    
+    /**
+     * Returns the time scale units in fractions of a second.
+     * 
+     * @return the time scale units in fractions of a second
+     */
+    public int getTimeScale() {
+        return timeScale;
+    }
+    
+    /**
+     * Returns the frame rate in frames per second.
+     * <br>
+     * Equivalent to: <pre>{@code getTimeScale()/(double)getTimeStep()}</pre>
+     * 
+     * @return the frame rate
+     */
+    public double getFrameRate() {
+        return timeScale/(double)timeStep;
+    }
+    
+    /**
+     * Returns the current frame index. The current frame index is the index of
+     * next frame to be encoded.
+     * 
+     * @return the current frame index
+     */
+    public long getFrameIndex() {
+        return frameIndex;
+    }
+    
+    /**
+     * Returns the current frame time in seconds. The current frame time is the
+     * time for the next frame to be encoded.
+     * <br>
+     * Equivalent to: <pre>{@code (getFrameIndex()*getTimeStep())/(double)getTimeScale()}</pre>
+     *
+     * @return the current frame time in seconds
+     */
+    public double getFrameTime() {
+        return (frameIndex*timeStep)/(double)(timeScale);
+    }
+    
+    /**
+     * Returns the audio source file or {@code null} if no audio source has been
+     * set.
+     * 
+     * @return the audio source file or {@code null} if no audio source has been set
+     */
+    public File getAudioSourceFile() {
+        return audioFile;
+    }    
+    
+    /**
+     * Returns {@code true} if {@link #close()} has been invoked.
+     * 
+     * @return {@code true} if {@code close()} has been called
+     */
+    public boolean isClosed() {
+        return isClosed;
     }
     
     /**
@@ -176,26 +212,25 @@ public class VideoEncoder {
      * the constructor by a previous call to this method will cause an
      * {@code IllegalStateException} to be thrown.
      * 
-     * @param audioFileName the audio source file
-     * @param audioSeekTime the time to seek to in the audio stream in microseconds
-     * @throws IllegalArgumentException if {@code audioFileName} is {@code null} or empty
-     * @throws IllegalArgumentException if {2code audioSeekTime} is not in range [0,inf)
+     * @param audioFile the audio source file
+     * @param seekTime the time to seek to within the audio source in seconds
+     * @throws IllegalArgumentException if {@code audioFile} is {@code null}
+     * @throws IllegalArgumentException if {@code seekTime} is not not in range [0,inf)
      * @throws IllegalStateException if an audio source has already been set
-     * @throws IllegalStateException if {@code close()} has been previously invoked
-     * @throws IOException if there was an error opening or reading the file
-     * @throws AudioStreamNotFoundException if the file specified does not contain an audio stream
-     * @throws XugglerErrorException if an error occurred while seeking to the specified time
+     * @throws IllegalStateException if the {@code VideoEncoder} has been closed
+     * @throws IOException if there was an error setting the audio source or transcoding the audio
      */
-    public void setAudioSource(String audioFileName, long audioSeekTime) 
-            throws AudioStreamNotFoundException, XugglerErrorException, IOException {
-        if (audioTranscoder != null)
+    public void setAudio(File audioFile, double seekTime) throws IOException {
+        if (audioFile == null)
+            throw new IllegalArgumentException("audioFile is null");
+        if (!(0 <= seekTime && seekTime < Double.POSITIVE_INFINITY))
+            throw new IllegalArgumentException("seekTime is not not in range [0,inf): "+seekTime);
+        if (this.audioFile != null)
             throw new IllegalStateException("an audio source has already been set");
-        if (!writer.isOpen())
-            throw new IllegalStateException("the video encoder has been closed");
-        // Create the audio transcoder
-        audioTranscoder = new AudioStreamTranscoder(audioFileName, audioSeekTime);
-        // Transcode audio up to the current frame
-        audioTranscoder.transcode(getTimeMicro());
+        if (isClosed)
+            throw new IllegalStateException("VideoEncoder is closed");
+        this.audioFile = audioFile;
+        initAudio(seekTime);
     }
     
     /**
@@ -206,186 +241,85 @@ public class VideoEncoder {
      * @param image the image to append to the video stream
      * @throws IllegalArgumentException if {@code image} is null
      * @throws IllegalArgumentException if the resolution of {@code image} does not match the expected resolution
-     * @throws IllegalStateException if {@code close()} has been previously invoked
-     * @throws XugglerErrorException if an error occurred wile reading the audio source file
+     * @throws IllegalStateException if the {@code VideoEncoder} has been closed
+     * @throws IOException if an error occurred while adding the frame
      */
-    public void encodeFrame(BufferedImage image) throws XugglerErrorException {
+    public void addFrame(BufferedImage image) throws IOException {
         if (image == null)
-            throw new IllegalArgumentException("image cannot be null: "+image);
-        if (image.getWidth() != imageBuffer.getWidth() || image.getHeight() != imageBuffer.getHeight())
-            throw new IllegalArgumentException("image resolution does not match; expected: "+imageBuffer.getWidth()+"x"+imageBuffer.getHeight()+" found: "+image.getWidth()+"x"+image.getHeight());
-        if (!writer.isOpen())
-            throw new IllegalStateException("the video encoder has been closed");
-        // Copy the image into the buffer (image buffer is TYPE_3BYTE_BGR)
-        imageBufferGraphics.drawImage(image, 0, 0, null);
-        // Calculate the time in microseconds for the current frame
-        long time = getTimeMicro();
-        // Encode the video frame
-        writer.encodeVideo(videoStreamIndex, imageBuffer, time, TimeUnit.MICROSECONDS);
-        // Encode the audio for the frame
-        if (audioTranscoder != null)
-            audioTranscoder.transcode(time);
-        // Increment the frame index
+            throw new IllegalArgumentException("image is null");
+        if (image.getWidth() != width || image.getHeight() != height)
+            throw new IllegalArgumentException("image resolution does not match; expected: "+width+"x"+height+" found: "+image.getWidth()+"x"+image.getHeight());
+        if (isClosed)
+            throw new IllegalStateException("VideoEncoder is closed");
+        encodeImage(image);
+        if (audioFile != null)
+            encodeAudio();
         frameIndex++;
     }
     
     /**
-     * Closes I/O stream attached to this {@code VideoEncoder}.
-     * <p>
-     * After invoking this method, any subsequent invocation of 
-     * {@link #encodeFrame(java.awt.image.BufferedImage) encodeFrame()} or
-     * {@link #setAudioSource(java.lang.String, long) setAudioSource()} will
-     * cause an {@code IllegalStateException} to be thrown.
-     * <p>
-     * Invoking this method more than once has no additional effects.
+     * Closes the {@code VideoEncoder} and releases any system resources
+     * associated with it.
+     * 
+     * @throws IOException if an error occurred wile closing the {@code VideoEncoder}
      */
-    public void close() {
-        // If the audioReader is not null and is open, close it
-        if (audioTranscoder != null && audioTranscoder.audioReader.isOpen())
-            audioTranscoder.audioReader.close();
-        // If the writer is open, close it
-        if (writer.isOpen())
-            writer.close();
+    @Override
+    public void close() throws IOException {
+        isClosed = true;
+        onClose();
     }
     
     /**
-     * Returns the current length of the encoded video stream in microseconds.
+     * Initializes audio transcoding resources and transcodes audio form the
+     * source to output file upto the current frame.
+     * <p>
+     * This method is called by {@link #setAudioSource(File, double)} so it will
+     * be invoked at most once. Users of {@code VideoEncoder} may call invoke
+     * this method before any images have been encoded, after some images have
+     * been coded and more remain, or after all images have been encoded. It is
+     * up to this method to ensure that all off the audio corresponding to 
+     * frame {@code 0} through {@link #frameIndex} has been encoded.
+     * <p>
+     * The parameter {@code seekTime} represents the time that the audio should
+     * skip to for encoding the first frame. That is, time 0 sec in the video
+     * output corresponds to {@code seekTime} in the audio source time. 
+     * {@code seekTime} is guaranteed to be in the range [0,inf), ie a non-negative normal number.
      * 
-     * @return the length of the encoded video microseconds
+     * @param seekTime the time to skip
+     * @throws IOException if there was an error setting the audio source or transcoding the audio
      */
-    public long getTimeMicro() {
-        return (long)((frameIndex/framesPerSecond)*1e6);
-    }
+    protected abstract void initAudio(double seekTime) throws IOException;
     
-    private class AudioStreamTranscoder extends MediaListenerAdapter {
-        /**
-         * The audio file name.
-         */
-        private final String audioFileName;
-        
-        /**
-         * The audio media reader.
-         */
-        private final IMediaReader audioReader;
+    /**
+     * Encodes video for the next frame.
+     * <p>
+     * This method is called by {@link #encodeFrame(BufferedImage)} before
+     * encoding audio and before incrementing the frame index.
+     * 
+     * @param image the image to encode
+     * @throws IOException if an error occurs wile encoding the image
+     */
+    protected abstract void encodeImage(BufferedImage image) throws IOException;
     
-        /**
-         * The index of the first audio stream found in the file.
-         */
-        private final int inputStreamIndex;
-        
-        /**
-         * The time for audio stream in microseconds.
-         */
-        private long audioTime;
-        
-        /**
-         * Constructs a new {@code AudioStreamTranscoder}.
-         * 
-         * @param audioFileName the path to the audio file
-         * @param skipToTime the time to seek to in the audio file in microseconds
-         * @throws IllegalArgumentException if {@code audioFileName} is {@code null} or empty
-         * @throws IllegalArgumentException if {@code audioSeekTime} is not in the range [0,inf)
-         * @throws IOException if there was an error opening or reading the file
-         * @throws AudioStreamNotFoundException if the specified file does not contain an audio stream
-         * @throws XugglerErrorException if an error occurs while attempting to seek to the correct time
-         */
-        AudioStreamTranscoder(String audioFileName, long audioSeekTime) 
-                throws AudioStreamNotFoundException, XugglerErrorException, IOException {
-            if (audioFileName == null || audioFileName.isEmpty())
-                throw new IllegalArgumentException("audioFileName cannot be null or empty: "+audioFileName);
-            if (audioSeekTime < 0)
-                throw new IllegalArgumentException("audioSeekTime is not in range [0,inf): "+audioSeekTime);
-            // Store the audio file name
-            this.audioFileName = audioFileName;
-            // Create a container to hold the input media file
-            IContainer container = IContainer.make();
-            // Open the input file for reading and store the returned error number
-            int errorNo = container.open(audioFileName, IContainer.Type.READ, null);
-            // If there was an error, throw an exception
-            if (errorNo < 0)
-                throw new IOException("failed to open file: "+IError.errorNumberToType(errorNo).name()+" \""+audioFileName+"\"");
-            // Create the media reader for the file
-            audioReader = ToolFactory.makeReader(container);
-            // Add this AustioStreamTranscoder as a listener to the reader
-            audioReader.addListener(this);
-            // Get the audio stream from the container
-            IStream audioStream = AudioDecoder.getAudioStream(container);
-            // If no audio stream was found, throw an exception
-            if (audioStream == null)
-                throw new AudioStreamNotFoundException("file does not contain an audio stream: "+audioFileName);
-            // Store the index of the audio stream
-            inputStreamIndex = audioStream.getIndex();
-            // Get the input stream coder
-            IStreamCoder audioCoder = audioStream.getStreamCoder();
-            // Use atleast 1 channel and atmost 2
-            int channels = audioCoder.getChannels();
-            if (channels < 1) channels = 1;
-            if (channels > 2) channels = 2;
-            // Use the same sample rate as the input stream, or 48khz if the
-            // input sample rate is unknown
-            int sampleRate = audioCoder.getSampleRate();
-            if (sampleRate < 0) sampleRate = 48000;
-            // Add the audio stream to the writer
-            writer.addAudioStream(
-                    audioStreamIndex,       // Audio stream index
-                    0,                      // Codec stream id
-                    ICodec.ID.CODEC_ID_MP3, // AAC (lossless) codec
-                    channels,               // Output num channels
-                    sampleRate);            // Output sample rate
-            // Set the initial time
-            audioTime = 0; // 0 microseconds
-            // While the audio time has not caught up to the seek time...
-            while (audioTime < audioSeekTime) {
-                // Read the next packet and catch the return code
-                IError error = audioReader.readPacket();
-                // If there was an error...
-                if (error != null) {
-                    // If it was the EOF singal, break
-                    if (error.getType() == IError.Type.ERROR_EOF) {
-                        break;
-                    }
-                    // Otherwise it was a real error, throw an exception
-                    throw new XugglerErrorException(error, "Error encountered while decoding audio file: "+audioFileName);
-                }
-            }
-        }
-        
-        @Override
-        public void onAudioSamples(IAudioSamplesEvent event) {
-            // If the event is for the correct audio stream...
-            if (event.getStreamIndex() == inputStreamIndex) {
-                // Get the time for the event
-                audioTime = event.getTimeStamp();
-                System.out.println("audioTime: "+audioTime);
-                // Get the audio samples from the event
-                IAudioSamples audioSamples = event.getAudioSamples();
-                // Write the audio samples to the output file
-                writer.encodeAudio(audioStreamIndex, audioSamples);
-            }
-        }
-        
-        /**
-         * Transcodes audio from the audio source file to the output file from
-         * the current audio stream time to up to the specified time.
-         * 
-         * @param videoTime the time that the audio stream needs to catch up to
-         * @throws XugglerErrorException if an error occurs while transcoding the audio
-         */
-        public void transcode(long videoTime) throws XugglerErrorException {
-            // While the audio time has not caught up to the video time...
-            while (audioTime < videoTime) {
-                // Read the next packet and catch the return code
-                IError error = audioReader.readPacket();
-                // If there was an error...
-                if (error != null) {
-                    // If it was the EOF singal, break
-                    if (error.getType() == IError.Type.ERROR_EOF) {
-                        break;
-                    }
-                    // Otherwise it was a real error, throw an exception
-                    throw new XugglerErrorException(error, "Error encountered while decoding audio file: "+audioFileName);
-                }
-            }
-        }
-    }
+    /**
+     * Encodes audio for the next frame.
+     * <p>
+     * This method is called by {@link #encodeFrame(BufferedImage)} if
+     * {@link #audioFile} is not {@code null} after encoding the image and
+     * before incrementing the frame index.
+     * 
+     * @throws IOException if an error occurs wile encoding the audio
+     */
+    protected abstract void encodeAudio() throws IOException;
+    
+    /**
+     * Closes the {@code VideoEncoder} and releases any system resources
+     * associated with it.
+     * <p>
+     * Called by {@link #close()} after the {@link #isClosed() isClosed} is set
+     * to {@code true}.
+     * 
+     * @throws IOException if an error occurs wile closing the {@code VideoEncoder}
+     */
+    protected abstract void onClose() throws IOException;
 }

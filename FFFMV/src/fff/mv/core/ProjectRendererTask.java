@@ -19,8 +19,7 @@
 package fff.mv.core;
 
 import fff.flame.Flame;
-import fff.mv.core.KeyFlameList;
-import fff.mv.core.Project;
+import fff.render.FlameRenderer;
 import fff.render.RendererCallback;
 import fff.render.RendererTask;
 
@@ -61,42 +60,18 @@ public class ProjectRendererTask extends RendererTask {
     /**
      * Constructs a new {@code ProjectRendererTask} using the specified 
      * {@link Project} and {@link RendererCallback} function.
-     * <p>
-     * The {@code ProjectRendererTask} will return {@link Flame} objects 
-     * corresponding to frames 
      * 
      * @param project the project to render
      * @param callback the callback function used by the {@link FlameRenderer}
      */
-    public ProjectRendererTask(
-            Project project, 
-            RendererCallback callback) {
-        this(project, callback, 0);
-    }
-    
-    /**
-     * Constructs a new {@code ProjectRendererTask} using the specified 
-     * {@link Project}, {@link RendererCallback} function, and 
-     * {@code startFrameIndex}. 
-     * <p>
-     * The parameter {@code startFrameIndex} allows the 
-     * {@code ProjectRendererTask} begin at the specified frame index.
-     * 
-     * @param project the project to render
-     * @param callback the callback function used by the {@link FlameRenderer}
-     * @param startFrameIndex 
-     */
-    public ProjectRendererTask(
-            Project project,
-            RendererCallback callback, 
-            int startFrameIndex) {
+    public ProjectRendererTask(Project project, RendererCallback callback) {
         super(callback, project.getRendererSettings().getSettings());
         keyFlameList = project.getKeyFlameList();
         startSec = project.getStartSec();
         lengthSec = project.getLengthSec();
         frameRate = project.getFrameRate();
         frameCount = Math.max((int)Math.ceil(lengthSec*frameRate), 1);
-        frameIndex = startFrameIndex;
+        frameIndex = 0;
     }
 
     @Override
