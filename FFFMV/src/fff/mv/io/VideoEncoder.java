@@ -273,7 +273,7 @@ public abstract class VideoEncoder implements Closeable {
      * Initializes audio transcoding resources and transcodes audio form the
      * source to output file upto the current frame.
      * <p>
-     * This method is called by {@link #setAudioSource(File, double)} so it will
+     * This method is called by {@link #setAudio(File, double)} so it will
      * be invoked at most once. Users of {@code VideoEncoder} may call invoke
      * this method before any images have been encoded, after some images have
      * been coded and more remain, or after all images have been encoded. It is
@@ -293,7 +293,7 @@ public abstract class VideoEncoder implements Closeable {
     /**
      * Encodes video for the next frame.
      * <p>
-     * This method is called by {@link #encodeFrame(BufferedImage)} before
+     * This method is called by {@link #addFrame(BufferedImage) (BufferedImage)} before
      * encoding audio and before incrementing the frame index.
      * 
      * @param image the image to encode
@@ -304,7 +304,7 @@ public abstract class VideoEncoder implements Closeable {
     /**
      * Encodes audio for the next frame.
      * <p>
-     * This method is called by {@link #encodeFrame(BufferedImage)} if
+     * This method is called by {@link #addFrame(BufferedImage)} if
      * {@link #audioFile} is not {@code null} after encoding the image and
      * before incrementing the frame index.
      * 
