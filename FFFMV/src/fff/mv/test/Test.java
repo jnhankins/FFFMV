@@ -31,9 +31,9 @@ import fff.render.FlameRenderer;
 import fff.render.RendererCallback;
 import fff.render.RendererSettings;
 import fff.render.RendererTask;
+import fff.render.RendererUpdate;
 import fff.render.ocl.FlameRendererOpenCL;
 import fff.render.ocl.FlameRendererOpenCL.DeviceType;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
@@ -98,13 +98,13 @@ public class Test {
             // Create the callback function
             RendererCallback callback = new RendererCallback() {
                 @Override
-                public void rendererCallback(RendererTask task, Flame flame, BufferedImage image, double quality, double points, double elapsedTime, boolean isFinished) {
+                public void rendererCallback(RendererUpdate update) {
                     // Print an update
-                    System.out.println(String.format("Drawn %.2fM dots in %.2f sec at %.2fM dots/sec for quality of %.2f.", points/1e7, elapsedTime, points/(1e7*elapsedTime), quality));
+                    System.out.println(update.toString());
                     // If the image is finished...
-                    if (isFinished) {
+                    if (update.isFinished()) {
                         // Get the project renderer task
-                        ProjectRendererTask ptask = (ProjectRendererTask)task;
+                        ProjectRendererTask ptask = (ProjectRendererTask)update.getTask();
                         // Get the total number of frames
                         int total = ptask.getFrameCount();
                         // Get the frame index
@@ -117,12 +117,12 @@ public class Test {
                         System.out.println("Encoding frame "+index+"/"+total+" @"+formatTime(tTimeSec)+" @"+formatTime(eTimeSec)+"\n");
                         try {
                             // Append the image to the end of the video
-                            encoder.addFrame(image);
+                            encoder.addFrame(update.getImage());
                             // If an error occured decoding the audio source file...
                         } catch (IOException ex) {
                             // Print a stack trace for the error
                             ex.printStackTrace(System.err);
-                            // And trigger shutdown hooks
+                            // ...and trigger shutdown hooks
                             System.exit(0);
                         }
                     }
