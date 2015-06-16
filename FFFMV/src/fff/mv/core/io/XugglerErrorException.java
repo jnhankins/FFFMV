@@ -16,7 +16,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fff.mv.io;
+package fff.mv.core.io;
 
 import com.xuggle.xuggler.IError;
 import java.io.IOException;

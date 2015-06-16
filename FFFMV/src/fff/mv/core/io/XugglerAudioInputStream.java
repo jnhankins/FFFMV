@@ -16,7 +16,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fff.mv.io;
+package fff.mv.core.io;
 
 import com.xuggle.ferry.IBuffer;
 import com.xuggle.xuggler.Global;
@@ -29,6 +29,7 @@ import com.xuggle.xuggler.IPacket;
 import com.xuggle.xuggler.IRational;
 import com.xuggle.xuggler.IStream;
 import com.xuggle.xuggler.IStreamCoder;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.sound.sampled.AudioFormat;
@@ -100,11 +101,11 @@ public class XugglerAudioInputStream extends AudioInputStream {
      * 
      * @param file the file to open and stream
      * @return the audio stream
-     * @throws IllegalArgumentException if {@code file} is {@code null} or empty
+     * @throws IllegalArgumentException if {@code file} is {@code null}
      * @throws XugglerErrorException if there was an error opening the file
      * @see #open(String, Integer, Integer, Encoding) 
      */
-    public static XugglerAudioInputStream open(String file) throws XugglerErrorException {
+    public static XugglerAudioInputStream open(File file) throws XugglerErrorException {
         return open(file, null, null, null);
     }
     
@@ -115,17 +116,17 @@ public class XugglerAudioInputStream extends AudioInputStream {
      * {@code sampleRate}, or {@code encoding} is {@code null}, then default
      * values will be chosen for the {@code null} value.
      * 
-     * @param file the name of the input file
+     * @param file the input file
      * @param channels the number of channels for the output or {@code null} to use the default value
      * @param sampleRate the sample rate in Hz for the output or {@code null} to use the default value
      * @param encoding the sample encoding format for the output or {@code null} to use the default value
      * @return the audio stream
-     * @throws IllegalArgumentException if {@code file} is {@code null} or empty
+     * @throws IllegalArgumentException if {@code file} is {@code null}
      * @throws IllegalArgumentException if {@code channels} is not {@code null} or positive
      * @throws IllegalArgumentException if {@code sampleRate} is not {@code null} or positive
      * @throws XugglerErrorException if there was an error opening the file
      */
-    public static XugglerAudioInputStream open(String file, Integer channels, Integer sampleRate, Encoding encoding) throws XugglerErrorException {
+    public static XugglerAudioInputStream open(File file, Integer channels, Integer sampleRate, Encoding encoding) throws XugglerErrorException {
         // Create the input stream
         InnerInputStream inStream = new InnerInputStream(file, channels, sampleRate, encoding);
         // Create and return the XugglerAudioInputStream
@@ -240,9 +241,9 @@ public class XugglerAudioInputStream extends AudioInputStream {
      */
     static class InnerInputStream extends InputStream {
         /**
-         * The name of the input file.
+         * The input file.
          */
-        final String file;
+        final File file;
         
         /**
          * The container for the media in the file.
@@ -324,19 +325,19 @@ public class XugglerAudioInputStream extends AudioInputStream {
          * FFMPEG to decode the specified file into a byte stream with the
          * requested number of channels, sample rate, and sample encoding.
          * 
-         * @param file the name of the input file
+         * @param file the input file
          * @param channels the number of channels for the output or {@code null} to use the default value
          * @param sampleRate the sample rate in Hz for the output or {@code null} to use the default value
          * @param encoding the sample encoding format for the output or {@code null} to use the default value
-         * @throws IllegalArgumentException if {@code file} is {@code null} or empty
+         * @throws IllegalArgumentException if {@code file} is {@code null}
          * @throws IllegalArgumentException if {@code channels} is not positive
          * @throws IllegalArgumentException if {@code sampleRate} is not positive
          * @throws XugglerErrorException if there was an error opening the file
          * @throws XugglerStreamNotFoundException if an audio stream could not be located within the file
          */
-        InnerInputStream(String file, Integer channels, Integer sampleRate, Encoding encoding) throws XugglerErrorException {
-            if (file == null || file.isEmpty())
-                throw new IllegalArgumentException("file cannot be null or empty: "+file);
+        InnerInputStream(File file, Integer channels, Integer sampleRate, Encoding encoding) throws XugglerErrorException {
+            if (file == null)
+                throw new IllegalArgumentException("file cannot be null");
             if (channels != null && channels < 1)
                 throw new IllegalArgumentException("channels is out of range [1,inf): "+channels);
             if (sampleRate != null && sampleRate < 1)
@@ -349,14 +350,14 @@ public class XugglerAudioInputStream extends AudioInputStream {
             container = IContainer.make();
             
             // Open the input file for reading
-            int errorNo = container.open(file, IContainer.Type.READ, null);
+            int errorNo = container.open(file.getPath(), IContainer.Type.READ, null);
             if (errorNo < 0)
-                throw new XugglerErrorException(errorNo, "Error opening file: "+file);
+                throw new XugglerErrorException(errorNo, "Error opening file: "+file.getPath());
             
             // Get the index of the audio
             IStream audioStream = getAudioStream(container);
             if (audioStream == null)
-                throw new XugglerErrorException(IError.make(IError.Type.ERROR_UNKNOWN), "Could not an find audio stream in file: "+file);
+                throw new XugglerErrorException(IError.make(IError.Type.ERROR_UNKNOWN), "Could not an find audio stream in file: "+file.getPath());
             
             // Store the stream index and coder
             streamIndex = audioStream.getIndex();
@@ -365,7 +366,7 @@ public class XugglerAudioInputStream extends AudioInputStream {
             // Open the audio coder
             errorNo = audioCoder.open(null, null);
             if (errorNo < 0)
-                throw new XugglerErrorException(errorNo, "Error opening file: "+file);
+                throw new XugglerErrorException(errorNo, "Error opening file: "+file.getPath());
             
             // Get the number of channels, sample rate, and format for the input
             int inChannels   = audioCoder.getChannels();
@@ -472,8 +473,12 @@ public class XugglerAudioInputStream extends AudioInputStream {
                         // Decode the next chunk of the packet and throw an
                         // exception if an error occurs
                         int bytesDecoded = audioCoder.decodeAudio(inSamples, packet, packetOffset);
-                        if (bytesDecoded < 0)
-                            throw new IOException("Error encountered while decoding audio in file: "+file);
+                        if (bytesDecoded < 0) {
+                            System.err.println("Error encountered while decoding audio in file: "+file.getPath());
+                            packetOffset = packet.getSize();
+                            break;
+//                            throw new IOException("Error encountered while decoding audio in file: "+file.getPath());
+                        }
                         packetOffset += bytesDecoded;
                         // If the input samples buffer is full...
                         if (inSamples.isComplete()) {
@@ -640,32 +645,21 @@ public class XugglerAudioInputStream extends AudioInputStream {
     }
     
     public static void main(String[] args) throws XugglerErrorException, LineUnavailableException, IOException {
-//        String filename = "E:\\Music\\Nero\\[2011] Welcome Reality\\Nero - Welcome Reality - 07 - Innocence.flac";
-//        String filename = "E:\\Music\\Essential Mix\\Essential Mix (2008-04-12) Pete Tong & Martin Doorly.mp3";
-        String filename = "E:\\Music\\Essential Mix\\Essential Mix (2011-04-16) Alex Metric.mp3";
+//        File file = new File("E:\\Music\\Nero\\[2011] Welcome Reality\\Nero - Welcome Reality - 07 - Innocence.flac");
+//        File file = new File("E:\\Music\\Essential Mix\\Essential Mix (2008-04-12) Pete Tong & Martin Doorly.mp3");
+        File file = new File("E:\\Music\\Essential Mix\\Essential Mix (2011-04-16) Alex Metric.mp3");
         
-        AudioInputStream stream = XugglerAudioInputStream.open(filename);
+        AudioInputStream stream = XugglerAudioInputStream.open(file);
         AudioFormat format = stream.getFormat();
         
         DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
         SourceDataLine mLine = (SourceDataLine)AudioSystem.getLine(info);
         mLine.open(format);
         mLine.start();
-        
-//        long sec = (long)(100*60);
-//        long skip = sec*44100*4;
-//        java.awt.Toolkit.getDefaultToolkit().beep();
-//        stream.skip(skip);
-//        java.awt.Toolkit.getDefaultToolkit().beep();
-        
         int len;
         byte[] buffer = new byte[1024*4];
-        long totLen = 0;
-        while ((len = stream.read(buffer)) >= 0) {
-            //System.out.println(Arrays.toString(buffer));
-            totLen += len;
+        while ((len = stream.read(buffer)) >= 0)
             mLine.write(buffer, 0, len);
-        }
         mLine.drain();
     }
 }

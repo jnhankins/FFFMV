@@ -16,13 +16,13 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fff.mv.io;
+package fff.mv.core.io;
 
 import com.xuggle.mediatool.IMediaWriter;
 import com.xuggle.mediatool.ToolFactory;
 import com.xuggle.xuggler.ICodec;
 import com.xuggle.xuggler.IRational;
-import fff.mv.io.XugglerAudioInputStream.Encoding;
+import fff.mv.core.io.XugglerAudioInputStream.Encoding;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -167,7 +167,7 @@ public class XugglerVideoEncoder extends VideoEncoder {
     protected void initAudio(double seekTime) throws IOException {
         // Crea the audio input stream
         audioInputStream = XugglerAudioInputStream.open(
-                getAudioSourceFile().getPath(), null, null, Encoding.S16);
+                getAudioSourceFile(), null, null, Encoding.S16);
         // Seek to the correct time
         audioInputStream.seek(seekTime);
         // Get the audio format

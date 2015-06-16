@@ -16,7 +16,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fff.mv.io;
+package fff.mv.core.io;
 
 import java.awt.image.BufferedImage;
 import java.io.Closeable;
@@ -24,6 +24,8 @@ import java.io.File;
 import java.io.IOException;
 
 /**
+ * {@code VideoEncoder} provides a implementation independent framework for
+ * encoding a sequence of images (and optionally audio) into a video file.
  *
  * @author Jeremiah N. Hankins
  */

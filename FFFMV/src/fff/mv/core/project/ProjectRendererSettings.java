@@ -16,8 +16,9 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fff.mv.core;
+package fff.mv.core.project;
 
+import fff.mv.core.PropertyChangeAdapter;
 import fff.render.RendererSettings;
 import java.io.Serializable;
 

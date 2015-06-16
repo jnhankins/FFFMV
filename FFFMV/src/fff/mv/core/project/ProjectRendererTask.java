@@ -16,7 +16,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fff.mv.core;
+package fff.mv.core.project;
 
 import fff.flame.Flame;
 import fff.render.FlameRenderer;

@@ -16,17 +16,17 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fff.mv.test;
+package fff.mv.core.test;
 
 import fff.flame.Flame;
 import fff.flame.FlameFactory;
-import fff.mv.core.KeyFlameList;
-import fff.mv.core.Project;
-import fff.mv.core.ProjectFlame;
-import fff.mv.core.ProjectFlameSet;
-import fff.mv.core.ProjectRendererTask;
-import fff.mv.io.VideoEncoder;
-import fff.mv.io.XugglerVideoEncoder;
+import fff.mv.core.project.KeyFlameList;
+import fff.mv.core.project.Project;
+import fff.mv.core.project.ProjectFlame;
+import fff.mv.core.project.ProjectFlameSet;
+import fff.mv.core.project.ProjectRendererTask;
+import fff.mv.core.io.VideoEncoder;
+import fff.mv.core.io.XugglerVideoEncoder;
 import fff.render.FlameRenderer;
 import fff.render.RendererCallback;
 import fff.render.RendererSettings;
@@ -140,7 +140,7 @@ public class Test {
             // Shutdown when complete
             renderer.shutdown();
             // Wait for shutdown
-            renderer.awaitTermination(Long.MAX_VALUE);
+            renderer.awaitTermination();
             // Close the encoder (not strictly necessary)
             encoder.close();
             // All Done!
