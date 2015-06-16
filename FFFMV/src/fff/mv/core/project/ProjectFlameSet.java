@@ -34,12 +34,12 @@ import java.util.ArrayList;
  */
 public class ProjectFlameSet extends PropertyChangeAdapter implements Serializable {
     /**
-     * Indicates that a new {@link ProjectFlame} has been {@link #add(fff.flame.Flame, java.lang.String) added}.
+     * Indicates that a new {@link ProjectFlame} has been {@link #add(Flame, java.lang.String) added}.
      */
     public static final String FLAME_ADDED_PROPERTY = "flameAdded";
     
     /**
-     * Indicates the a {@link ProjectFlame} has been {@link #removeFlame(fff.mv.core.ProjectFlame) removed}.
+     * Indicates the a {@link ProjectFlame} has been {@link #removeFlame(ProjectFlame) removed}.
      */
     public static final String FLAME_REMOVED_PROPERTY = "flameRemoved";
     

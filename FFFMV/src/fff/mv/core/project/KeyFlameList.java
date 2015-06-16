@@ -61,12 +61,12 @@ import java.util.ArrayList;
  */
 public class KeyFlameList extends PropertyChangeAdapter implements Serializable {
     /**
-     * Indicates that an new {@link Entry} was {@link #add(fff.mv.core.ProjectFlame, double) added}.
+     * Indicates that an new {@link Entry} was {@link #add(fff.mv.core.project.ProjectFlame, double) added}.
      */
     public static final String ENTRY_ADDED_PROPERTY = "entryAdded";
     
     /**
-     * Indicates that an {@link Entry} was {@link #remove(fff.mv.core.KeyFlameList.Entry) removed}.
+     * Indicates that an {@link Entry} was {@link #remove(KeyFlameList.Entry)  removed}.
      */
     public static final String ENTRY_REMOVED_PROPERTY = "entryRemoved";
     

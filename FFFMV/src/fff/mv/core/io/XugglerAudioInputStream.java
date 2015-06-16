@@ -103,7 +103,7 @@ public class XugglerAudioInputStream extends AudioInputStream {
      * @return the audio stream
      * @throws IllegalArgumentException if {@code file} is {@code null}
      * @throws XugglerErrorException if there was an error opening the file
-     * @see #open(String, Integer, Integer, Encoding) 
+     * @see #open(File, Integer, Integer, XugglerAudioInputStream.Encoding) 
      */
     public static XugglerAudioInputStream open(File file) throws XugglerErrorException {
         return open(file, null, null, null);
