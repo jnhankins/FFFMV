@@ -1,3 +1,3 @@
-[submodule "FFF"]
-	path = FFF
-	url = https://github.com/jnhankins/FastFlameFractals.git
+[submodule "JFF"]
+	path = JFF
+	url = https://github.com/jnhankins/JavaFlameFractals.git
