@@ -22,7 +22,9 @@ import com.jnhankins.jff.mv.core.io.XugglerAudioInputStream;
 import java.io.File;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -287,7 +289,7 @@ public class AudioDataTask {
                 // stream
                 byte[] byteBuffer = new byte[fftLength*4];
                 // Create a float buffer to convert the bytes into floats
-                FloatBuffer floatBuffer = ByteBuffer.wrap(byteBuffer).asFloatBuffer();
+                FloatBuffer floatBuffer = ByteBuffer.wrap(byteBuffer).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer();
                 // Create a buffer to hold fft input
                 float[] fftBufferI = new float[fftLength];
                 // Create a buffer to hold fft output
@@ -412,8 +414,8 @@ public class AudioDataTask {
     
     public static void main(String[] args) throws InterruptedException {
         System.out.println("hi");
-//        File file = new File("E:\\Music\\Nero\\[2011] Welcome Reality\\Nero - Welcome Reality - 07 - Innocence.flac");
-        File file = new File("E:\\Music\\Essential Mix\\Essential Mix (2011-04-16) Alex Metric.mp3");
+        File file = new File("E:\\Music\\Nero\\[2011] Welcome Reality\\Nero - Welcome Reality - 07 - Innocence.flac");
+//        File file = new File("E:\\Music\\Essential Mix\\Essential Mix (2011-04-16) Alex Metric.mp3");
         AudioDataTask task = new AudioDataTask(file, 44100, 2048, 0);
         task.setExceptionHandler(new UncaughtExceptionHandler() {
             @Override

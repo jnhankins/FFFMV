@@ -525,17 +525,24 @@ public class XugglerAudioInputStream extends AudioInputStream {
         
         @Override
         public int read() throws IOException {
-            // If there are no samples, we've hit EOF
-            if (!getSamples())
-                return -1;
-            // Create a 1 byte array to hold our result
-            byte[] ret = new byte[1];
-            // Read out the next byte
-            sampleBuffer.get(sampleBufferOffset, ret, 0, 1);
-            // Increment the sample offset
-            sampleBufferOffset++;
-            // Return the sample
-            return ret[0];
+            // This operation is nonsensical when the format uses more than one
+            // byte per sample. The only format which uses only one byte is
+            // unsigned, but this operation uses -1 to indicate EOF, so this
+            // operation fails for all supported formats.
+            throw new UnsupportedOperationException();
+            
+            
+//            // If there are no samples, we've hit EOF
+//            if (!getSamples())
+//                return -1;
+//            // Create a 1 byte array to hold our result
+//            byte[] ret = new byte[1];
+//            // Read out the next byte
+//            sampleBuffer.get(sampleBufferOffset, ret, 0, 1);
+//            // Increment the sample offset
+//            sampleBufferOffset++;
+//            // Return the sample
+//            return ret[0];
         }
         
         @Override
@@ -649,8 +656,11 @@ public class XugglerAudioInputStream extends AudioInputStream {
 //        File file = new File("E:\\Music\\Essential Mix\\Essential Mix (2008-04-12) Pete Tong & Martin Doorly.mp3");
         File file = new File("E:\\Music\\Essential Mix\\Essential Mix (2011-04-16) Alex Metric.mp3");
         
+        
+//        AudioInputStream stream = XugglerAudioInputStream.open(file, 2, 44100, XugglerAudioInputStream.Encoding.S16);
         AudioInputStream stream = XugglerAudioInputStream.open(file);
         AudioFormat format = stream.getFormat();
+        System.out.println(format);
         
         DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
         SourceDataLine mLine = (SourceDataLine)AudioSystem.getLine(info);
