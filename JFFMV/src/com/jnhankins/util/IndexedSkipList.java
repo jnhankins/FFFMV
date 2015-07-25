@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.jnhankins.jff.mv.core.audio;
+package com.jnhankins.util;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
@@ -20,14 +20,13 @@ import java.util.Random;
  * of subsequences, each skipping over fewer elements. {@code IndexedSkipList}
  * implements all optional {@code Collection} operations and permits
  * {@code null} and repeated elements. The elements are ordered using their
- * {@link Comparable natural ordering}, or by a {@code Comparator} provided at
+ * {@link java.lang.Comparable natural ordering}, or by a {@code Comparator} provided at
  * set creation time, depending on which constructor is used.
  * <p>
  * The {@code contains}, {@code indexOf}, {@code get}, {@code add}, and
- * {@code remove} methods run in amortized {@code log(n)} time (for both index
- * based and object reference based methods). While the {@code size},
- * {@code isEmpty}, {@code clear}, and {@code iterator} operations run in
- * constant time.
+ * {@code remove} methods run in amortized {@code log(n)} time. While the
+ * {@code size}, {@code isEmpty}, {@code clear}, and {@code iterator} operations
+ * run in constant time.
  * <p>
  * Skip list details: This implementation of indexed skip list uses
  * probabilistic methods for generating the internal link hierarchy. The number
@@ -59,6 +58,18 @@ import java.util.Random;
  * would be wrong to write a program that depended on this exception for its
  * correctness: <i>the fail-fast behavior of iterators should be used only to
  * detect bugs</i>.
+ * <p>
+ * <i>Credit where credit is due: This source code is base on two sources:
+ * The indexed skip list algorithms are borrowed from Raymond Hettinger's
+ * Python example code found 
+ * <a href="https://code.activestate.com/recipes/576930/">here</a>. And the idea
+ * for dynamically modifying the maximum level was inspired in part by Michael
+ * Naper's work found
+ * <a href="http://michaelnaper.com/samplework/programming/skiplist_java/SkipList.java">here</a>.
+ * The comments mimic the style and wording of comments of classes found in the
+ * <a href="https://docs.oracle.com/javase/8/docs/technotes/guides/collections/">Java
+ * Collections Framework</a>.
+ * </i>
  * 
  * @author Jeremiah N. Hankins
  */
@@ -101,7 +112,7 @@ public class IndexedSkipList<E> implements Collection<E> {
     /**
      * Constructs a new, empty indexed skip list, sorted according to the
      * natural ordering of its elements. All elements inserted into the set must
-     * implement the {@link Comparable} interface. Furthermore, all such
+     * implement the {@link java.lang.Comparable} interface. Furthermore, all such
      * elements must be <i>mutually comparable</i>: {@code e1.compareTo(e2)}
      * must not throw a {@code ClassCastException} for any elements {@code e1}
      * and {@code e2} in the skip list. If the user attempts to add an element
@@ -125,8 +136,8 @@ public class IndexedSkipList<E> implements Collection<E> {
      * {@code add} call will throw a {@code ClassCastException}.
      *
      * @param comparator the comparator that will be used to order this skip
-     * list, or {@code null} if the {@link Comaprable} of the elements will be
-     * used
+     * list, or {@code null} if the {@link java.lang.Comparable natrual ordering} of the
+     * elements will be used
      */
     public IndexedSkipList(Comparator<? super E> comparator) {
         this(null, comparator);
@@ -137,7 +148,7 @@ public class IndexedSkipList<E> implements Collection<E> {
      * Constructs a new indexed skip list containing the elements in the
      * specified collection, sorted according to the natural ordering of its
      * elements. All elements inserted into the set must implement the
-     * {@link Comparable} interface. Furthermore, all such elements must be
+     * {@link java.lang.Comparable} interface. Furthermore, all such elements must be
      * <i>mutually comparable</i>: {@code e1.compareTo(e2)} must not throw a
      * {@code ClassCastException} for any elements {@code e1} and {@code e2} in
      * the skip list. If the user attempts to add an element to the skip list
@@ -165,8 +176,8 @@ public class IndexedSkipList<E> implements Collection<E> {
      *
      * @param collection the collection whose elements will comprise the new set
      * @param comparator the comparator that will be used to order this skip
-     * list, or {@code null} if the {@link Comaprable} of the elements will be
-     * used
+     * list, or {@code null} if the {@link java.lang.Comparable natural ordering} of the
+     * elements will be used
      */
     public IndexedSkipList(Collection<? extends E> collection, Comparator<? super E> comparator) {
         // Store the comparator
@@ -406,7 +417,7 @@ public class IndexedSkipList<E> implements Collection<E> {
      * 
      * @param e the element to be added to this skip list
      * @return {@code true} (as specified by 
-     * {@link Collection#add(java.lang.Object) Collection.add(E))
+     * {@link Collection#add(java.lang.Object) Collection.add(E)})
      * @throws ClassCastException if the specified object cannot be compared
      * with the elements currently in the skip list
      * @throws NullPointerException if the specified element is {@code null} and

@@ -16,7 +16,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.jnhankins.jff.mv.core.audio;
+package com.jnhankins.util;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -26,9 +26,7 @@ import java.util.Queue;
 /**
  * {@code SimpleMovingMedian} provides a mechanism for efficiently finding
  * simple moving median (aka rolling median or running median) of a time series
- * of comparable elements. In certain circumstances, a simple moving median may
- * sometimes be preferable over a simple moving average when the time series
- * experiences rare events such as rapid shocks or other anomalies.
+ * of comparable elements.
  * 
  * @author Jeremiah N. Hankins
  * @param <E> the the type of {@code Comparable} object contained in this list
@@ -55,7 +53,7 @@ public class SimpleMovingMedian<E extends Comparable<? super E>> {
      * the element at index {@code ceil(numSamples/2)} otherwise it will be the
      * element at index {@code floor(numSamples/2)}.
      */
-    private boolean useHighMedian;
+    private boolean useHighMedian = true;
     
     /**
      * Constructs a new {@code SimpleMovingMean} using the specified maximum
@@ -65,11 +63,10 @@ public class SimpleMovingMedian<E extends Comparable<? super E>> {
      * @param useHighMedian if {@code true} the higher median should be used
      * @throws IllegalArgumentException if {@code maxSize} is not positive
      */
-    public SimpleMovingMedian(int maxSize, boolean useHighMedian) {
+    public SimpleMovingMedian(int maxSize) {
         if (maxSize < 1)
             throw new IllegalArgumentException("maxSize must be postive: "+maxSize);
         this.maxSize = maxSize;
-        this.useHighMedian = useHighMedian;
     }
     
     /**
@@ -122,9 +119,10 @@ public class SimpleMovingMedian<E extends Comparable<? super E>> {
     /**
      * Set the {@code useHighMedian} flag.
      * 
-     * @param useHighMedian if {@code true} the returned median for an odd number of
-     * elements will be the element at index {@code ceil(numSamples/2)}
-     * otherwise it will be the element at index {@code floor(numSamples/2)}
+     * @param useHighMedian if {@code true} the returned median for an odd
+     * number of elements will be the element at index
+     * {@code ceil(numSamples/2)} otherwise it will be the element at index
+     * {@code floor(numSamples/2)}
      */
     public void setUseHighMedian(boolean useHighMedian) {
         this.useHighMedian = useHighMedian;
