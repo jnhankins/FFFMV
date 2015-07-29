@@ -129,6 +129,11 @@ public class AudioData {
     protected final List<float[]> fftData;
     
     /**
+     * The resolution of the FFT frequency bins specified in Hz.
+     */
+    protected final float fftBinResolution;
+    
+    /**
      * A list of the frequency for each FFT bin.
      */
     protected final float[] fftBinFreq;
@@ -164,17 +169,19 @@ public class AudioData {
         this.sampleRate = sampleRate;
         this.fftLength = fftLength;
         this.fftOverlap = fftOverlap;
-        // Construct the data arrays \
+        // Construct the data arrays
         rmsData = new ArrayList();
         fftData = new ArrayList();
         // Initialize maximum value trakers
         rmsMax = 0;
         fftMax = 0;
         fftBinMax = new float[fftLength/2];
+        // Initialise the FFT bin resolution
+        fftBinResolution = ((float)sampleRate)/fftLength;
         // Initialize the FFT bin freuqneices
         fftBinFreq = new float[fftLength/2];
         for (int i=0; i<fftBinFreq.length; i++)
-            fftBinFreq[i] = i*((float)sampleRate/fftLength);
+            fftBinFreq[i] = i*fftBinResolution;
         // Initialize the total frame count
         frameCount = 0;
         // Set the initial state
@@ -343,6 +350,15 @@ public class AudioData {
             arr = new float[getFFTBinCount()];
         System.arraycopy(fftData.get(frame), 0, arr, 0, getFFTBinCount());
         return arr;
+    }
+    
+    /**
+     * Returns the resolution of the FFT bins specified in Hz.
+     * 
+     * @return the resolution of the FFT bins specified in Hz
+     */
+    public float getFFTBinResolution() {
+        return fftBinResolution;
     }
     
     /**

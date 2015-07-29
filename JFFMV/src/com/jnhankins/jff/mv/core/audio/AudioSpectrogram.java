@@ -20,22 +20,13 @@ package com.jnhankins.jff.mv.core.audio;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.Timer;
 
 /**
  * This class draws spectrograms for {@code AudioData}.
- * 
  * 
  * @author Jeremiah N. Hankins
  */
@@ -281,6 +272,13 @@ public class AudioSpectrogram {
         return lin +  (log - lin) * linLogRatio;
     }
     
+    /**
+     * Renders panels and stores them in the cache.
+     * 
+     * @param maxVisFrame the minimum visible frame index
+     * @param minVisPanel the minimum visible panel index
+     * @param maxVisPanel the maximum visible panel index
+     */
     private void buildImageCache(int maxVisFrame, int minVisPanel, int maxVisPanel) {
         
         // Get the audio frame rate (audio frames per second)
@@ -431,10 +429,8 @@ public class AudioSpectrogram {
      * Draws the spectrogram representing the specified {@code AudioData} on the
      * specified graphics context.
      * 
-     * If {@code audioData} is {@code null} then only the background is drawn.
-     * 
      * @param g the graphics context on which to draw the spectrogram
-     * @param audioData the source for the drawn spectrogram's audio data
+     * @param audioData the data source for the spectrogram
      * @param x0 the x-coordinate of the upper left corner of the spectrogram
      * @param y0 the y-coordinate of the upper left corner of the spectrogram
      * @param dx the width of the spectrogram in pixels
@@ -461,6 +457,10 @@ public class AudioSpectrogram {
             throw new IllegalArgumentException("dx and dy must be positive: dx="+dx+" dy="+dy);
         if (!(Double.NEGATIVE_INFINITY < t0 && t0 <= t1 && t1 < Double.POSITIVE_INFINITY))
             throw new IllegalArgumentException("t0 and t1 must be finite and t0 must be less than or equal to t1: t0="+t0+" t1="+t1);
+        
+        // Do nothing if there is no audio data available
+        if (audioData.getFrameCount() < 1)
+            return;
         
         // Translate and clip the graphics context
         g = g.create(x0, y0, dx, dy);
@@ -577,54 +577,5 @@ public class AudioSpectrogram {
         while (list.size() < size) {
             list.add(null);
         }
-    }
-    
-    public static void main(String[] args) throws InterruptedException {
-        File file = new File("E:\\Music\\Essential Mix\\Essential Mix (2011-04-16) Alex Metric.mp3");
-//        File file = new File("E:\\Music\\Nero\\[2011] Welcome Reality\\Nero - Welcome Reality - 07 - Innocence.flac");
-        AudioDataTask task = new AudioDataTask(file, 44100, 2048, 0);
-        task.setExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread thread, Throwable thrown) {
-                System.err.println(thrown);
-            }
-        });
-        
-        AudioData data = task.getData();
-        
-        
-        AudioSpectrogram spectrogram = new AudioSpectrogram();
-        
-        JFrame frame = new JFrame();
-        frame.setTitle(file.toString());
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(800, 600);
-        frame.add(new JPanel() {
-            public void paint(Graphics g) {
-                g.setColor(Color.yellow);
-                g.fillRect(0, 0, getWidth(), getHeight());
-                spectrogram.drawSpectrogram(
-                        g, 
-                        data,
-                        0, 0, 
-                        getWidth(), getHeight(), 
-                        0, data.getFrameCount()/data.getFrameRate());
-            }
-        });
-        frame.setVisible(true);
-        
-        Timer repaintTimer = new Timer(200, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent ae) {
-                frame.repaint();
-            }
-        });
-        repaintTimer.start();
-        
-        
-        task.start();
-        task.awaitTermination();
-        
-        repaintTimer.stop();
     }
 }
