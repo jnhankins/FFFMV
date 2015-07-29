@@ -28,11 +28,10 @@ import java.util.List;
  * generated image is not a waveform in the truest sense because it does not use
  * individual PCM data points from the original audio signal. Instead the a
  * waveform image is generated using the relative height for each frame, which
- * indicates the relative volumes of each frame. To further accentuate the
- * relative difference in volume, only top half of the waveform is displayed.
- * Additionally, a color is assigned to each to each frame based on the FFT
- * results to provide some indication of the overall tone or pitch contained in
- * the portion of the audio signal contained in the frame.
+ * indicates the relative volumes of each frame. Additionally, a color is
+ * assigned to each to each frame based on the FFT results to provide some
+ * indication of the overall tone or pitch contained in the portion of the audio
+ * signal contained in the frame.
  * 
  * @author Jeremiah N. Hankins
  */
@@ -76,7 +75,7 @@ public class AudioWaveform {
     /**
      * A vector containing the cached frame data.
      */
-    private final Vector frameDataCache;
+    private final CacheVector frameDataCache;
     
     /**
      * A list of vectors containing cached pixel data for various scales. This
@@ -87,7 +86,7 @@ public class AudioWaveform {
      * {@code pixelDataArrays.get(i)} is given by
      * {@code pixelDataArrayScales.get(i)}.
      */
-    private final List<Vector> pixelDataArrays;
+    private final List<CacheVector> pixelDataArrays;
     
     /**
      * A list containing the scales of the pixel caches stored in
@@ -103,12 +102,12 @@ public class AudioWaveform {
      * beginning of this list. Its used to implement a crude least-recently-used
      * (LRU) caching algorithm for pixel data.
      */
-    private final List<Vector> pixelDataArrayUseOrder;
+    private final List<CacheVector> pixelDataArrayUseOrder;
     
     /**
      * A vector containing the pixel cache that is currently in use.
      */
-    private Vector pixelDataArray;
+    private CacheVector pixelDataArray;
     
     /**
      * An estimate of the number of bytes currently being used by the pixel 
@@ -125,7 +124,8 @@ public class AudioWaveform {
     private float[] hsbBuffer;
     
     /**
-     * The following variables are used for debugging the caches.
+     * The following variables are used for debugging the caches and gauging 
+     * their efficiency.
      */
     private final boolean DEBUG_PRINT = false;
     private long frameDataArrayCacheHit  = 0;
@@ -141,15 +141,42 @@ public class AudioWaveform {
      * Constructs a new {@code AudioWaveform}.
      */
     public AudioWaveform() {
-        frameDataCache = new Vector();
+        frameDataCache = new CacheVector();
         pixelDataArrays = new ArrayList();
         pixelDataArrayScales = new ArrayList();
         pixelDataArrayUseOrder = new ArrayList();
         pixelCacheSize = 0;
     }
     
+    /**
+     * Draws the waveform representing the specified {@code AudioData} on the
+     * specified graphics context.
+     * 
+     * @param g the graphics context on which to draw the waveform
+     * @param audioData the data source for the waveform
+     * @param x0 the x-coordinate of the upper left corner of the waveform
+     * @param y0 the y-coordinate of the upper left corner of the waveform
+     * @param dx the width of the waveform in pixels
+     * @param dy the height of the waveform in pixels
+     * @param t0 the minimum visible time (the time at {@code x0})
+     * @param t1 the maximum visible time (the time at {@code x0+dx})
+     * 
+     * @throws NullPointerException if {@code g} or {@code audioData} is {@code null}
+     * @throws IllegalArgumentException if either {@code dx} or {@code dy} is not positive
+     * @throws IllegalArgumentException if either {@code t0} or {@code t1} is not finite or {@code t1} is greater than {@code t0}
+     */
     public void drawWaveform(Graphics g, AudioData audioData, int x0, int y0, int dx, int dy, double t0, double t1) {
-        if (audioData == null || audioData.getFrameCount() < 1)
+        if (g == null)
+            throw new NullPointerException("g");
+        if (audioData == null)
+            throw new NullPointerException("audioData");
+        if (dx < 1 || dy < 1)
+            throw new IllegalArgumentException("dx and dy must be positive: dx="+dx+" dy="+dy);
+        if (!(Double.NEGATIVE_INFINITY < t0 && t0 <= t1 && t1 < Double.POSITIVE_INFINITY))
+            throw new IllegalArgumentException("t0 and t1 must be finite and t0 must be less than or equal to t1: t0="+t0+" t1="+t1);
+        
+        // Do nothing if there is no audio data available
+        if (audioData.getFrameCount() < 1)
             return;
         
         // Calcualte the total elapsed time
@@ -164,14 +191,13 @@ public class AudioWaveform {
         // Initialize the pixel data cache and get the scale that will be used
         dtdx = initPixelData(audioData, dtdx);
         
-        // Store the audio data was used to initialize the caches
+        // Store the audio data that will be used
         this.audioData = audioData;
-        // Store whether or not the audio is done processing
-        // Store the number of frames
+        // Since the AudioData object might still be decoding audio and 
+        // processing frames concurrently in annother thread while this function
+        // is running, to simplify things, lock in some key variables now
         int frameCount = audioData.getFrameCount();
-        // Store the maximum RMS value
         float rmsMax = audioData.getRMSMax();
-        // Store the frame rate
         double frameRate = audioData.getFrameRate();
         
         // Get the minimum pixel index (inclusive)
@@ -188,9 +214,9 @@ public class AudioWaveform {
             maxFrame = (int)Math.ceil(frameRate*dtdx*(maxPx+1));
         }
         
-        // Ensure the frame data cache is large enough
+        // Ensure the frame data cache will be large enough
         sizeFrameData(maxFrame+1);
-        // Ensure the pixel data cache is large enough
+        // Ensure the pixel data cache will be large enough
         sizePixelData(maxPx);
         
         // Precalculate the y value at the bottom of the waveform
@@ -342,7 +368,7 @@ public class AudioWaveform {
         }
         // There are no cached arrays with scales aproximatly equal to the
         // requested scale, so create a new array to use
-        pixelDataArray = new Vector();
+        pixelDataArray = new CacheVector();
         // Store the array and its scale in the cache
         pixelDataArrays.add(pixelDataArray);
         pixelDataArrayScales.add(dtdx);
@@ -436,7 +462,7 @@ public class AudioWaveform {
         // While the cache is too large and there is more than one cache entry
         while (pixelCacheSize > maxPixelCacheSize && pixelDataArrays.size() > 1) {
             // Get the array that has not been used for the greatest period of time
-            Vector arrayToRemove = pixelDataArrayUseOrder.get(0);
+            CacheVector arrayToRemove = pixelDataArrayUseOrder.get(0);
             // Remove the array from the cache
             // Use a loop to find the index because List.remove(Vector) invokes
             // Vector.equals(Vector) which does element-wise comparisons...
@@ -527,7 +553,7 @@ public class AudioWaveform {
         frameDataCache.set(frameIndex, color, height);
     }
     
-    private class Vector {
+    private class CacheVector {
         /**
          * The initial size of the vector.
          */
@@ -540,7 +566,7 @@ public class AudioWaveform {
         private int colors[];
         private float heights[];
         
-        Vector() {
+        CacheVector() {
             colors = new int[SIZE_INIT];
             heights = new float[SIZE_INIT];
             for (int i=0; i<SIZE_INIT; i++) {
