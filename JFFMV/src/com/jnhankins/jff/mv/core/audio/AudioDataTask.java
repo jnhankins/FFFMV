@@ -340,13 +340,9 @@ public class AudioDataTask {
                     // Create the array that will hold the amplitutes of the fft
                     // results for this frame
                     float[] fftResults = new float[fftBinCount];
-                    // Keep track of the rms value
-                    double rms = 0;
                     // Convert the complex fft results into amplitudes and
                     // calcualte the RMS value
                     for (int i=0; i<fftBinCount; i++) {
-                        // Update the rms
-                        rms += fftBufferI[i]*fftBufferI[i];
                         // Convert the complex fft result into an amplitde
                         float re = fftBufferO[2*i];
                         float im = fftBufferO[2*i+1];
@@ -360,13 +356,17 @@ public class AudioDataTask {
                             data.fftBinMax[i] = mag;
                         }
                     }
-                    // Finish the RMS calculation and store the result
-                    float rmsValue = (float)Math.sqrt(rms/fftBinCount);
+                    // Store the FFT results
+                    data.fftData.add(fftResults);
+                    // Calculate the rms value
+                    double rms = 0;
+                    for (int i=0; i<fftLength; i++)
+                        rms += fftBufferI[i]*fftBufferI[i];
+                    float rmsValue = (float)Math.sqrt(rms/fftLength);
+                    // Keep track of the maximum rms value and store the reults
                     if (rmsValue > data.rmsMax)
                         data.rmsMax = rmsValue;
                     data.rmsData.add(rmsValue);
-                    // Store the FFT results
-                    data.fftData.add(fftResults);
                     // Increment the frame index
                     data.frameCount++;
                     // If the position of the end of the stream is known and the

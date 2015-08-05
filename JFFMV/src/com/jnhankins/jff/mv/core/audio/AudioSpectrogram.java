@@ -161,6 +161,45 @@ public class AudioSpectrogram {
     }
     
     /**
+     * Returns the number of FFT bins that were used to generate the image drawn
+     * by the most recent call to {@code #drawSpectrogram}. 
+     * <p>
+     * The value returned by this method is undefined if
+     * {@code #drawSpectrogram} has never been called or if
+     * {@code setMaxFrequency} was called more recently than
+     * {@code #drawSpectrogram}.
+     * 
+     * @return the number of FFT bins used to draw the most recently drawn
+     * spectrogram
+     */
+    public int getBinsUsed() {
+        return numBinsToUse;
+    }
+    
+    /**
+     * Returns the "height" of the bin with the specified index that was used to
+     * generate the image drawn by the most recent call to
+     * {@code #drawSpectrogram}. The height is in the range [0, 1] and is an
+     * absolute height, not a relative height such that the heights of the bins
+     * is monotonically increasing and {@code getBinHeight(getBinsUsed()-1)} is
+     * always {@code 1.0}.
+     * <p>
+     * The behavior of this method is undefined if
+     * {@code #drawSpectrogram} has never been called or if
+     * {@code setMaxFrequency} was called more recently than
+     * {@code #drawSpectrogram}.
+     * 
+     * @param binIndex the index of the bin
+     * @return the height of the bin with the specified index
+     * @throws IllegalArgumentException if {@code binIndex} is not in range [0, {@code getBinsUsed()})
+     */
+    public double getBinHeight(int binIndex) {
+        if (!(0 <= binIndex && binIndex < numBinsToUse))
+            throw new IllegalArgumentException("binIndex is not in range [0, "+numBinsToUse+"): "+binIndex);
+        return binYs[binIndex]/(double)binYs[numBinsToUse-1];
+    }
+    
+    /**
      * Clears the cache if the cache was not built for the specified audio data.
      * 
      * @param audioData the new audio data for the cache
@@ -232,7 +271,7 @@ public class AudioSpectrogram {
 
         // Determine how many FFT bins will be used
         numBinsToUse = Math.min(
-                (int)(maxFrequency/fftResolution),
+                (int)Math.ceil(maxFrequency/fftResolution)+1,
                 audioData.getFFTBinCount());
         
         // The bin for the highest frequency will be the shortest bin (in
