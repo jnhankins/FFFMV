@@ -74,8 +74,8 @@ public class Test {
 
             // Set timing info: 25 fps, 20 sec long
             project.setFrameRate(1, 25); // 25 fps
-            project.setStartSec(0);      //  0 sec
-            project.setLengthSec(20);    // 20 sec
+            project.setStartTime(0);     //  0 sec
+            project.setDuration(20);     // 20 sec
             
             // Set some optimization flags
             RendererSettings settings = project.getRendererSettings().getSettings();

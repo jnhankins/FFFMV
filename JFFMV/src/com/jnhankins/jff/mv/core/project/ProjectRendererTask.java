@@ -50,6 +50,7 @@ import com.jnhankins.jff.render.RendererTask;
  */
 public class ProjectRendererTask extends RendererTask {
     private final KeyFlameList keyFlameList;
+    private final AudioEffectList audioEffectList;
     private final double startSec;
     private final double lengthSec;
     private final double frameRate;
@@ -67,8 +68,9 @@ public class ProjectRendererTask extends RendererTask {
     public ProjectRendererTask(Project project, RendererCallback callback) {
         super(callback, project.getRendererSettings().getSettings());
         keyFlameList = project.getKeyFlameList();
-        startSec = project.getStartSec();
-        lengthSec = project.getLengthSec();
+        audioEffectList = project.getAudioEffectList();
+        startSec = project.getStartTime();
+        lengthSec = project.getDuration();
         frameRate = project.getFrameRate();
         frameCount = Math.max((int)Math.ceil(lengthSec*frameRate), 1);
         frameIndex = 0;
@@ -77,7 +79,6 @@ public class ProjectRendererTask extends RendererTask {
     @Override
     public boolean hasNextFlame() {
         return frameIndex <= frameCount;
-        
     }
     
     @Override
@@ -86,9 +87,10 @@ public class ProjectRendererTask extends RendererTask {
         double time = getNextFrameTime();
         // Increment the frame index
         frameIndex++;
-        // Get the base flame from the keyflame list
+        // Get the base flame from the key-flame list
         flame = keyFlameList.getFlame(time, new Flame());
-        // TODO: Apply effectss
+        // Apply the audio-effects 
+        audioEffectList.applyEffects(time, flame);
         // Return the flame
         return flame;
     }

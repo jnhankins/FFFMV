@@ -374,13 +374,19 @@ public class KeyFlameList extends PropertyChangeAdapter implements Serializable 
         /**
          * The {@link ProjectFlame} used by this key flame entry.
          */
-        private ProjectFlame pflame; // Project flame
+        private ProjectFlame pflame;
         
         /**
-         * The time for this key flame entry
+         * The time for this key flame entry in seconds.
          */
-        private double time;         // Seconds
+        private double time;
         
+        /**
+         * Constructs a new {@code Entry} using the specified flame and time.
+         *
+         * @param pflame the flame
+         * @param time the time in seconds
+         */
         protected Entry(ProjectFlame pflame, double time) {
             this.pflame = pflame;
             this.time = time;
@@ -424,7 +430,7 @@ public class KeyFlameList extends PropertyChangeAdapter implements Serializable 
          * {@link #ENTRY_FLAME_CHANGED_PROPERTY} event will be fired.
          * 
          * @param pflame the {@code ProjectFlame}
-         * @throws IllegalArgumentException if {@code flame} is null
+         * @throws IllegalArgumentException if {@code flame} is {@code null}
          */
         public void setProjectFlame(ProjectFlame pflame) {
             if (pflame == null)

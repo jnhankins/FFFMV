@@ -67,12 +67,12 @@ public class Project extends PropertyChangeAdapter implements Serializable {
     /**
      * Identifies a change to the start time offset.
      */
-    public static final String START_SEC_CHANGED_PROPERTY = "startSec";
+    public static final String START_SEC_CHANGED_PROPERTY = "startTime";
     
     /**
      * Identifies a change to the length of the animation.
      */
-    public static final String LENGTH_SEC_CHANGED_PROPERTY = "lengthSec";
+    public static final String LENGTH_SEC_CHANGED_PROPERTY = "duration";
     
     /**
      * {@code true} if the {@code Project} and all of its subcomponents have not
@@ -103,6 +103,11 @@ public class Project extends PropertyChangeAdapter implements Serializable {
     private final KeyFlameList keyFlameList;
     
     /**
+     * Audio-effect list.
+     */
+    private final AudioEffectList audioEffectList;
+    
+    /**
      * Image settings used by a {@code FlameRenderer}.
      */
     private final ProjectRendererSettings rendererSettings;
@@ -124,13 +129,13 @@ public class Project extends PropertyChangeAdapter implements Serializable {
     /**
      * Animation starting point offset time in seconds.
      */
-    private double startSec;
+    private double startTime;
     
     /**
      * Length of animation in seconds.
      * Must be positive.
      */
-    private double lengthSec;
+    private double duration;
     
     /**
      * Constructs a new empty JFFMV {@code Project}.
@@ -146,15 +151,17 @@ public class Project extends PropertyChangeAdapter implements Serializable {
         flameSet = new ProjectFlameSet(this);
         // Empty key-flame list
         keyFlameList = new KeyFlameList(this);
+        // Empty audio-effect list
+        audioEffectList = new AudioEffectList(this);
         // Default image settings
         rendererSettings = new ProjectRendererSettings(this);
         // 25 fps
         timeStep = 1;
         timeScale = 25;
         // No starting time offset
-        startSec = 0;
+        startTime = 0;
         // 60 seconds of animation (boring blank animation)
-        lengthSec = 60;
+        duration = 60;
     }
     
     /**
@@ -282,6 +289,15 @@ public class Project extends PropertyChangeAdapter implements Serializable {
     }
     
     /**
+     * Returns the project's {@link AudioEffectList}.
+     * 
+     * @return the project's {@link AudioEffectList}
+     */
+    public AudioEffectList getAudioEffectList() {
+        return audioEffectList;
+    }
+    
+    /**
      * Returns the project's {@link ProjectRendererSettings} which wraps the
      * {@link RendererSettings}.
      * 
@@ -359,8 +375,8 @@ public class Project extends PropertyChangeAdapter implements Serializable {
      * 
      * @return the offset for the beginning of the animation in seconds
      */
-    public double getStartSec() {
-        return startSec;
+    public double getStartTime() {
+        return startTime;
     }
     
     /**
@@ -372,18 +388,18 @@ public class Project extends PropertyChangeAdapter implements Serializable {
      * specified start time is equal to the current start time, then this method
      * has no effect.
      * 
-     * @param startSec the offset for the beginning of the animation in seconds
-     * @throws IllegalArgumentException if {@code startSec} is not in range (-inf, inf)
+     * @param startTime the offset for the beginning of the animation in seconds
+     * @throws IllegalArgumentException if {@code startTime} is not in range (-inf, inf)
      */
-    public void setStartSec(double startSec) {
-        if (!(0<=startSec && startSec<Double.POSITIVE_INFINITY))
-            throw new IllegalArgumentException("startSec is not in range (-inf, inf): "+startSec);
-        double oldStartSec = this.startSec;
-        double newStartSec = startSec;
-        if (oldStartSec != newStartSec) {
-            this.startSec = startSec;
+    public void setStartTime(double startTime) {
+        if (!(0<=startTime && startTime<Double.POSITIVE_INFINITY))
+            throw new IllegalArgumentException("startTime is not in range (-inf, inf): "+startTime);
+        double oldStartTime = this.startTime;
+        double newStartTime = startTime;
+        if (oldStartTime != newStartTime) {
+            this.startTime = startTime;
             setIsSaved(false);
-            firePropertyChange(START_SEC_CHANGED_PROPERTY, oldStartSec, newStartSec);
+            firePropertyChange(START_SEC_CHANGED_PROPERTY, oldStartTime, newStartTime);
         }
     }
     
@@ -392,8 +408,8 @@ public class Project extends PropertyChangeAdapter implements Serializable {
      * 
      * @return the length of the animation in seconds
      */
-    public double getLengthSec() {
-        return lengthSec;
+    public double getDuration() {
+        return duration;
     }
     
     /**
@@ -404,18 +420,18 @@ public class Project extends PropertyChangeAdapter implements Serializable {
      * property event will be fired. If the specified length is equal to the
      * current length, then this method has no effect.
      * 
-     * @param lengthSec the length of the animation in seconds.
-     * @throws IllegalArgumentException if {@code lengthSec} is not in range (0,inf)
+     * @param duration the length of the animation in seconds.
+     * @throws IllegalArgumentException if {@code duration} is not in range (0,inf)
      */
-    public void setLengthSec(double lengthSec) {
-        if (!(0<=lengthSec && lengthSec<Double.POSITIVE_INFINITY))
-            throw new IllegalArgumentException("lengthSec is not in range [0,inf): "+lengthSec);
-        double oldLengthSec = this.lengthSec;
-        double newLengthSec = lengthSec;
-        if (oldLengthSec != newLengthSec) {
-            this.lengthSec = lengthSec;
+    public void setDuration(double duration) {
+        if (!(0<=duration && duration<Double.POSITIVE_INFINITY))
+            throw new IllegalArgumentException("duration is not in range [0,inf): "+duration);
+        double oldDuration = this.duration;
+        double newDuration = duration;
+        if (oldDuration != newDuration) {
+            this.duration = duration;
             setIsSaved(false);
-            firePropertyChange(LENGTH_SEC_CHANGED_PROPERTY, oldLengthSec, newLengthSec);
+            firePropertyChange(LENGTH_SEC_CHANGED_PROPERTY, oldDuration, newDuration);
         }
     }
 }
